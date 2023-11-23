@@ -1,2 +1,2 @@
-# infrakit-library
-Infrakit Library which provides shared functionality for infrakit apps
+# infrakit-cs-library
+Infrakit C# library for .NET 6 which provides shared functionality for Infrakit apps.
