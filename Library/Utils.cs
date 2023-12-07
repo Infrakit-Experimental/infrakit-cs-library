@@ -375,7 +375,7 @@ namespace Library
                     var language = doc.CreateElement("language");
                     root.AppendChild(language);
 
-                    var languageText = doc.CreateTextNode("de");
+                    var languageText = doc.CreateTextNode("en");
                     language.AppendChild(languageText);
 
                     save = true;
