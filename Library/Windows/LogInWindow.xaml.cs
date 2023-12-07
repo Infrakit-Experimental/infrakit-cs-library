@@ -21,8 +21,19 @@ namespace Library.InputWindows
             /// Initializes the components of the window.
             InitializeComponent();
 
-            /// Sets the username text box to the value stored in the settings file.
-            this.tbxUsername.Text = Settings.get("username");
+            /// Unprotects the username from to the value stored in the settings file and set it into the username text box if it's not null.
+            var protectedUsername = Settings.get("username");
+            if (protectedUsername is not null)
+            {
+                this.tbxUsername.Text = Utils.unprotectData(protectedUsername);
+            }
+
+            /// Unprotects the password from to the value stored in the settings file and set it into the password text box if it's not null.
+            var protectedPassword = Settings.get("password");
+            if (protectedPassword is not null)
+            {
+                this.tbxPassword.Password = Utils.unprotectData(protectedPassword);
+            }
 
             /// Sets the checked state of the remember me checkbox to true if the username text box is not empty.
             this.cbRemeberMe.IsChecked = (this.tbxUsername.Text.Length > 0);
@@ -44,11 +55,30 @@ namespace Library.InputWindows
 
             if (this.cbRemeberMe.IsChecked == true)
             {
-                Settings.set("username", this.tbxUsername.Text);
+                var protectedUsername = Utils.protectData(this.tbxUsername.Text);
+                if (protectedUsername is not null)
+                {
+                    Settings.set("username", protectedUsername);
+                }
+                else
+                {
+                    Settings.set("username");
+                }
+
+                var protectedPassword = Utils.protectData(this.tbxPassword.Password);
+                if(protectedPassword is not null)
+                {
+                    Settings.set("password", protectedPassword);
+                }
+                else
+                {
+                    Settings.set("password");
+                }
             }
             else
             {
                 Settings.set("username");
+                Settings.set("password");
             }
 
             Log.write("log.logIn \"" + this.tbxUsername.Text + "\"");

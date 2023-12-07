@@ -7,6 +7,7 @@
     xmlns:local="clr-namespace:Library.Windows"
     mc:Ignorable="d"
     Title="{DynamicResource settings.title}"
+    Icon="/Library;component/Resources/Icons/Settings.ico"
     Height="145"
     Width="275"
     MinHeight="145"

@@ -6,6 +6,8 @@ using System.Windows;
 using System.Xml;
 using System.Threading;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Library
 {
@@ -59,6 +61,8 @@ namespace Library
             return parent;
         }
 
+        #region log in
+
         /// <summary>
         /// Logs the user into the application.
         /// </summary>
@@ -77,6 +81,50 @@ namespace Library
 
             return true;
         }
+
+        /// <summary>
+        /// Encrypts the given string.
+        /// </summary>
+        /// <param name="sensitiveData">Data which should be encrypted</param>
+        /// <returns>An protected / encrypted string</returns>
+        public static string? protectData(string sensitiveData)
+        {
+            try
+            {
+                byte[] data = Encoding.UTF8.GetBytes(sensitiveData);
+                byte[] protectedData = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
+                string protectedDataAsString = Convert.ToBase64String(protectedData);
+                return protectedDataAsString;
+            }
+            catch (CryptographicException e)
+            {
+                Log.write(e.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Decrypts the given string.
+        /// </summary>
+        /// <param name="protectedDataAsString">Data which should be decrypted</param>
+        /// <returns>An unprotected / decrypted string</returns>
+        public static string? unprotectData(string protectedDataAsString)
+        {
+            try
+            {
+                byte[] protectedData = Convert.FromBase64String(protectedDataAsString);
+                byte[] data = ProtectedData.Unprotect(protectedData, null, DataProtectionScope.CurrentUser);
+                string sensitiveData = Encoding.UTF8.GetString(data);
+                return sensitiveData;
+            }
+            catch (CryptographicException e)
+            {
+                Log.write(e.ToString());
+                return null;
+            }
+        }
+
+        #endregion log in
 
         #region resources
 
@@ -366,6 +414,14 @@ namespace Library
                 {
                     var username = doc.CreateElement("username");
                     root.AppendChild(username);
+
+                    save = true;
+                }
+
+                if (root.SelectSingleNode("password") is null)
+                {
+                    var password = doc.CreateElement("password");
+                    root.AppendChild(password);
 
                     save = true;
                 }

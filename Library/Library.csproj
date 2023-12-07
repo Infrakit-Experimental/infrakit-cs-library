@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\Settings.ico" />
     <None Remove="Windows\Logo.ico" />
   </ItemGroup>
 
@@ -17,7 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\Logo.ico">
+    <Resource Include="Resources\Icons\Logo.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Settings.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

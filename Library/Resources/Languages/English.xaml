@@ -16,7 +16,7 @@
 
     <sys:String x:Key="logIn.username">Username:</sys:String>
     <sys:String x:Key="logIn.password">Password:</sys:String>
-    <sys:String x:Key="logIn.rememberMe">Remember the username</sys:String>
+    <sys:String x:Key="logIn.rememberMe">Remember me</sys:String>
     <sys:String x:Key="logIn.logIn">Log in</sys:String>
     
     <!--#endregion log in window-->
