@@ -744,7 +744,7 @@ namespace Library
                     var httpExeption = e as HttpRequestException;
                     if (httpExeption is not null && httpExeption.StatusCode == HttpStatusCode.Conflict)
                     {
-                        API.errorHandling(e, "api.document.getDocumentUploudURL", uuid: target);
+                        API.errorHandling(e, "api.document.getUploudURL", uuid: target);
                         return (false, null);
                     }
 
