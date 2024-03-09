@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using static Library.Utils;
@@ -21,19 +22,61 @@ namespace Library.InputWindows
             /// Initializes the components of the window.
             InitializeComponent();
 
-            /// Unprotects the username from to the value stored in the settings file and set it into the username text box if it's not null.
-            var protectedUsername = Settings.get("username");
-            if (protectedUsername is not null)
+            /// Read the username
+            #region username
+
+            try
             {
+                var protectedUsername = Settings.get("username");
+
+                /// Unprotects the username from to the value stored in the settings file and set it into the username text box.
                 this.tbxUsername.Text = Utils.unprotectData(protectedUsername);
             }
-
-            /// Unprotects the password from to the value stored in the settings file and set it into the password text box if it's not null.
-            var protectedPassword = Settings.get("password");
-            if (protectedPassword is not null)
+            catch (Exception ex)
             {
+                Log.write("logIn.username: " + ex.GetType() + " | " + ex.Message);
+
+                Settings.@override("username");
+
+                var languages = LibraryUtils.getRDict();
+                MessageBox.Show(
+                    languages["logIn.error.message"].ToString(),
+                    languages["logIn.error.caption"].ToString(),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
+
+                this.tbxUsername.Text = "";
+            }
+
+            #endregion username
+
+            /// Read the password
+            #region password
+
+            try
+            {
+                var protectedPassword = Settings.get("password");
+
+                /// Unprotects the password from to the value stored in the settings file and set it into the password text box.
                 this.tbxPassword.Password = Utils.unprotectData(protectedPassword);
             }
+            catch (Exception ex)
+            {
+                Log.write("logIn.password: " + ex.GetType() + " | " + ex.Message);
+
+                Settings.@override("password");
+
+                var languages = LibraryUtils.getRDict();
+                MessageBox.Show(
+                    languages["logIn.error.message"].ToString(),
+                    languages["logIn.error.caption"].ToString(),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
+            }
+
+            #endregion password
 
             /// Sets the checked state of the remember me checkbox to true if the username text box is not empty.
             this.cbRemeberMe.IsChecked = (this.tbxUsername.Text.Length > 0);

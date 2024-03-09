@@ -19,6 +19,9 @@
     <sys:String x:Key="logIn.rememberMe">Angemeldet bleiben</sys:String>
     <sys:String x:Key="logIn.logIn">Einloggen</sys:String>
 
+    <sys:String x:Key="logIn.error.caption">Fehler beim lesen der Einstellungen</sys:String>
+    <sys:String x:Key="logIn.error.message">Benutzername &amp; Passwort konnte nicht gelesen werden</sys:String>
+
     <!--#endregion log in window-->
 
     <!--#region settings window-->

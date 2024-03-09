@@ -19,6 +19,9 @@
     <sys:String x:Key="logIn.rememberMe">Remember me</sys:String>
     <sys:String x:Key="logIn.logIn">Log in</sys:String>
     
+    <sys:String x:Key="logIn.error.caption">Error reading the settings</sys:String>
+    <sys:String x:Key="logIn.error.message">Username &amp; password could not be read</sys:String>
+
     <!--#endregion log in window-->
 
     <!--#region settings window-->

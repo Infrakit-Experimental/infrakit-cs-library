@@ -110,6 +110,8 @@ namespace Library
         /// <returns>An unprotected / decrypted string</returns>
         public static string? unprotectData(string protectedDataAsString)
         {
+            if (protectedDataAsString.Equals("")) return null;
+
             try
             {
                 byte[] protectedData = Convert.FromBase64String(protectedDataAsString);
@@ -478,6 +480,41 @@ namespace Library
             }
 
             /// <summary>
+            /// Override a setting in the settings XML document.
+            /// </summary>
+            /// <param name="name">The name of the setting to override.</param>
+            /// <param name="parameter">The new value of the setting.</param>
+            public static void @override(string name, string parameter = "")
+            {
+                var resources = Settings.get();
+
+                XmlNode? node = resources.DocumentElement.SelectSingleNode("/body/" + name);
+
+                if(node is null)
+                {
+                    node = resources.CreateElement(name);
+
+                    XmlNode? body = resources.DocumentElement.SelectSingleNode("/body");
+
+                    if(body is null)
+                    {
+                        body = resources.CreateElement("body");
+                        resources.AppendChild(body);
+                    }
+
+                    body.AppendChild(node);
+                }
+                else
+                {
+                    node.RemoveAll();
+                }
+
+                node.AppendChild(resources.CreateTextNode(parameter));
+
+                resources.Save(Settings.path);
+            }
+
+            /// <summary>
             /// Gets an attribute of a setting in the settings XML document.
             /// </summary>
             /// <param name="setting">The name of the setting to get the attribute of.</param>
@@ -575,7 +612,26 @@ namespace Library
             /// <returns>The language setting.</returns>
             public static string get()
             {
-                return Settings.get("language");
+                try
+                {
+                    return Settings.get("language");
+                }
+                catch (Exception ex)
+                {
+                    Log.write("utils.errorSettings.getLanguage: " + ex.GetType() + " | " + ex.Message);
+
+                    Settings.@override("language", "en");
+
+                    var languages = Utils.Language.getRDict();
+                    MessageBox.Show(
+                        languages["settings.errorLoading.message"].ToString(),
+                        languages["settings.errorLoading.caption"].ToString(),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
+
+                    return "en";
+                }
             }
 
             /// <summary>
