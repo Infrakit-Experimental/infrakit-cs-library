@@ -38,13 +38,14 @@ namespace Library
             {
                 if (API.api is null)
                 {
+                    Log.write("api.key: Non-existent");
                     return null;
                 }
 
                 if (DateTime.Compare(DateTime.Now.ToUniversalTime(), API.api.Value.expire) > 0)
                 {
                     var language = LibraryUtils.getRDict();
-                    Log.write("api.APIExpired.caption: api.APIExpired.message");
+                    Log.write("api.key: Expired");
                     MessageBox.Show(
                         language["api.APIExpired.message"].ToString(),
                         language["api.APIExpired.caption"].ToString(),
@@ -94,10 +95,7 @@ namespace Library
         {
             API.api = API.postApiLogIn(username, password);
 
-            if(API.api is null)
-            {
-                return false;
-            }
+            if(API.api is null) return false;
 
             return true;
         }
@@ -110,20 +108,18 @@ namespace Library
         /// <returns>A tuple containing the API key and expiration date, or null if the login failed.</returns>
         private static (string key, DateTime expire)? postApiLogIn(string username, string password)
         {
-            string url = API.auth + "apilogin.json";
-
-            var client = new RestClient(url);
-
-            var request = new RestRequest();
-
-            request.AddParameter("username", username);
-            request.AddParameter("password", password);
-
-            RestResponse response;
-
             try
             {
-                response = client.Post(request);
+                string url = API.auth + "apilogin.json";
+
+                var client = new RestClient(url);
+
+                var request = new RestRequest();
+
+                request.AddParameter("username", username);
+                request.AddParameter("password", password);
+
+                var response = client.Post(request);
 
                 var json = response.Content;
                 var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -155,21 +151,19 @@ namespace Library
             //TODO: comment
             public static Guid? post(APIProject project)
             {
-                string url = API.uri + "project";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddBody(JsonConvert.SerializeObject(project));
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Post(request);
+                    string url = API.uri + "project";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddBody(JsonConvert.SerializeObject(project));
+
+                    var response = client.Post(request);
 
                     var json = response.Content;
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -196,19 +190,17 @@ namespace Library
             /// <returns>A list of all projects, or null if an error occurred.</returns>
             public static List<Models.Project> get()
             {
-                string url = API.uri + "projects";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "projects";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
 
                     var json = response.Content;
 
@@ -236,19 +228,17 @@ namespace Library
             /// <returns>The metadata for the project, or null if an error occurred.</returns>
             public static Models.Project getMetadata(Guid uuid)
             {
-                string url = API.uri + "project/" + uuid;
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "project/" + uuid;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -280,20 +270,18 @@ namespace Library
             /// <returns>A list of all folders in the project, or null if an error occurred.</returns>
             public static List<Models.Folder> getFolders(Guid uuid, int depth)
             {
-                string url = API.uri + "project/" + uuid + "/folders";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-                request.AddParameter("depth", depth);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "project/" + uuid + "/folders";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+                    request.AddParameter("depth", depth);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -332,19 +320,17 @@ namespace Library
             /// <returns>A tuple containing a list of folders and a list of documents, or null if an error occurred.</returns>
             public static (List<Models.Folder> folders, List<Models.Document> docs)? get(Guid uuid, bool includeParent = true, bool showErrorMessages = true)
             {
-                string url = API.uri + "folder/" + uuid;
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -392,22 +378,20 @@ namespace Library
             /// <returns>The UUID of the new folder, or null if an error occurred.</returns>
             public static Guid? post(Guid parentUuid, string name)
             {
-                string url = API.uri + "folder";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddParameter("parentUuid", parentUuid.ToString());
-                request.AddParameter("name", name);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Post(request);
+                    string url = API.uri + "folder";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("parentUuid", parentUuid.ToString());
+                    request.AddParameter("name", name);
+
+                    var response = client.Post(request);
 
                     var json = response.Content;
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -436,19 +420,17 @@ namespace Library
             /// <returns>The folder metadata, or null if an error occurred.</returns>
             public static Models.Folder? getMetadata(Guid uuid, bool showErrorMessages = true)
             {
-                string url = API.uri + "folder/" + uuid + "/metadata";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid + "/metadata";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
 
                     var json = response.Content;
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -478,19 +460,17 @@ namespace Library
             /// <returns>A list of all documents in the folder, or null if an error occurred.</returns>
             public static List<Models.Document>? getDocuments(Guid uuid)
             {
-                string url = API.uri + "folder/" + uuid + "/documents";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid + "/documents";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -523,19 +503,17 @@ namespace Library
             /// <returns>A list of all subfolders in the folder, or null if an error occurred.</returns>
             public static List<Models.Folder>? getFolders(Guid uuid, bool includeParent = true)
             {
-                string url = API.uri + "folder/" + uuid + "/folders";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid + "/folders";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -574,19 +552,17 @@ namespace Library
             /// <returns>A list of all images in the folder, or null if an error occurred.</returns>
             public static List<Image>? getImages(Guid uuid)
             {
-                string url = API.uri + "folder/" + uuid + "/images";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid + "/images";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -619,21 +595,19 @@ namespace Library
             /// <returns>A list of properties, or null if an error occurred.</returns>
             public static List<PropertyDeclaration> getProperties(Guid uuid)
             {
-                string url = API.uri + "folder/" + uuid + "/properties";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddParameter("uuid", uuid);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "folder/" + uuid + "/properties";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("uuid", uuid);
+
+                    var response = client.Get(request);
 
                     var json = response.Content;
 
@@ -662,19 +636,17 @@ namespace Library
             /// <returns>A list of all equipment in the project, or null if an error occurred.</returns>
             public static List<Models.Equipment>? get(Guid uuid)
             {
-                string url = API.uri + "equipment/by-project/" + uuid;
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "equipment/by-project/" + uuid;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
 
                     var json = response.Content;
 
@@ -713,22 +685,20 @@ namespace Library
             /// </returns>
             private static (bool status, (Uri url, Models.Document doc, Models.Document.Upload param)? items)? getUploudURL(string source, Guid target)
             {
-                string url = API.uri + "document/async-upload";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                var param = new Models.Document.Upload(source, target);
-                request.AddBody(JsonConvert.SerializeObject(param));
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Post(request);
+                    string url = API.uri + "document/async-upload";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var param = new Models.Document.Upload(source, target);
+                    request.AddBody(JsonConvert.SerializeObject(param));
+
+                    var response = client.Post(request);
                     var json = response.Content;
 
                     var value = (JObject)JsonConvert.DeserializeObject(json);
@@ -766,37 +736,37 @@ namespace Library
             /// </returns>
             public static (bool status, Models.Document? doc)? upload(string source, Guid target)
             {
-                var upload = API.Document.getUploudURL(source, target);
-
-                if (!upload.HasValue) return null;
-
-                if(!upload.Value.status) return (false, null);
-
-                var (url, doc, param) = upload.Value.items.Value;
-
-                string md5Base64 = Convert.ToBase64String(API.Document.HexStringToHex(param.checksum));
-
-                HttpWebRequest httpRequest = WebRequest.Create(url) as HttpWebRequest;
-                httpRequest.Method = "PUT";
-                httpRequest.Headers.Add("content-md5", md5Base64);
-                httpRequest.Headers.Add("content-length", param.size.ToString());
-                httpRequest.Headers.Add("content-type", param.contentType);
-
-                using (Stream dataStream = httpRequest.GetRequestStream())
-                {
-                    var buffer = new byte[8000];
-                    using (FileStream fileStream = new FileStream(source, FileMode.Open, FileAccess.Read))
-                    {
-                        int bytesRead = 0;
-                        while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            dataStream.Write(buffer, 0, bytesRead);
-                        }
-                    }
-                }
-
                 try
                 {
+                    var upload = API.Document.getUploudURL(source, target);
+
+                    if (!upload.HasValue) return null;
+
+                    if(!upload.Value.status) return (false, null);
+
+                    var (url, doc, param) = upload.Value.items.Value;
+
+                    string md5Base64 = Convert.ToBase64String(API.Document.HexStringToHex(param.checksum));
+
+                    HttpWebRequest httpRequest = WebRequest.Create(url) as HttpWebRequest;
+                    httpRequest.Method = "PUT";
+                    httpRequest.Headers.Add("content-md5", md5Base64);
+                    httpRequest.Headers.Add("content-length", param.size.ToString());
+                    httpRequest.Headers.Add("content-type", param.contentType);
+
+                    using (Stream dataStream = httpRequest.GetRequestStream())
+                    {
+                        var buffer = new byte[8000];
+                        using (FileStream fileStream = new FileStream(source, FileMode.Open, FileAccess.Read))
+                        {
+                            int bytesRead = 0;
+                            while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                dataStream.Write(buffer, 0, bytesRead);
+                            }
+                        }
+                    }
+
                     FileInfo fileInfo = new FileInfo(source);
                     long fileSizeInBytes = fileInfo.Length;
                     var timeout = (int)(fileSizeInBytes / 1024);
@@ -837,21 +807,19 @@ namespace Library
             /// <returns>The document object, or null if an error occurred.</returns>
             public static Models.Document? getMetadata(Guid uuid)
             {
-                string url = API.uri + "document/" + uuid;
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddParameter("includeAllVersions", false);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "document/" + uuid;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("includeAllVersions", false);
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -878,19 +846,17 @@ namespace Library
             /// <returns>True if the document was deleted successfully, false otherwise.</returns>
             public static bool delete(Guid uuid)
             {
-                string url = API.uri + "document/" + uuid;
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Delete(request);
+                    string url = API.uri + "document/" + uuid;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Delete(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -919,19 +885,17 @@ namespace Library
             /// <returns>A tuple containing the URL and document for the given document UUID, or null if the document cannot be found.</returns>
             public static (Uri uri, Models.Document doc)? getDownloadURL(Guid uuid)
             {
-                string url = API.uri + "document/" + uuid + "/async-download";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Post(request);
+                    string url = API.uri + "document/" + uuid + "/async-download";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Post(request);
                     var json = response.Content;
 
                     var value = (JObject)JsonConvert.DeserializeObject(json);
@@ -961,12 +925,12 @@ namespace Library
             /// </returns>
             public static (bool status, Models.Document? doc)? download(Guid source, string target)
             {
-                var download = API.Document.getDownloadURL(source);
-
-                if (!download.HasValue) return null;
-
                 try
                 {
+                    var download = API.Document.getDownloadURL(source);
+
+                    if (!download.HasValue) return null;
+
                     var (uri, doc) = download.Value;
 
                     if (File.Exists(target))
@@ -1030,40 +994,38 @@ namespace Library
             /// <returns>A list of logpoints, or null if an error occurred.</returns>
             public static List<Models.Logpoint> get(long fromTime, Guid? projectUuid = null, int? projectId = null, Guid? equipmentUuid = null, int? vehicleId = null)
             {
-                string url = API.uri + "logpoints";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-                request.AddParameter("fromTime", fromTime);
-
-                if (projectUuid.HasValue)
-                {
-                    request.AddParameter("projectUuid", projectUuid.Value);
-                }
-
-                if (projectId.HasValue)
-                {
-                    request.AddParameter("projectId", projectId.Value);
-                }
-
-                if (equipmentUuid.HasValue)
-                {
-                    request.AddParameter("equipmentUuid", equipmentUuid.Value);
-                }
-
-                if (vehicleId.HasValue)
-                {
-                    request.AddParameter("vehicleId", vehicleId.Value);
-                }
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "logpoints";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+                    request.AddParameter("fromTime", fromTime);
+
+                    if (projectUuid.HasValue)
+                    {
+                        request.AddParameter("projectUuid", projectUuid.Value);
+                    }
+
+                    if (projectId.HasValue)
+                    {
+                        request.AddParameter("projectId", projectId.Value);
+                    }
+
+                    if (equipmentUuid.HasValue)
+                    {
+                        request.AddParameter("equipmentUuid", equipmentUuid.Value);
+                    }
+
+                    if (vehicleId.HasValue)
+                    {
+                        request.AddParameter("vehicleId", vehicleId.Value);
+                    }
+
+                    var response = client.Get(request);
                     var json = response.Content;
 
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -1103,22 +1065,20 @@ namespace Library
             /// <returns>A list of properties, or null if an error occurred.</returns>
             public static List<PropertyDeclaration> get(Guid organizationUuid, Guid projektUuid)
             {
-                string url = API.uri + "property";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddParameter("organizationUuid", organizationUuid);
-                request.AddParameter("projectUuid", projektUuid);
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Get(request);
+                    string url = API.uri + "property";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("organizationUuid", organizationUuid);
+                    request.AddParameter("projectUuid", projektUuid);
+
+                    var response = client.Get(request);
 
                     var json = response.Content;
 
@@ -1144,21 +1104,19 @@ namespace Library
             /// <returns>The new property, or null if an error occurred.</returns>
             public static PropertyDeclaration add(PropertyDeclaration property)
             {
-                string url = API.uri + "property";
-
-                var client = new RestClient(url);
-
-                var request = new RestRequest();
-
-                request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-                request.AddBody(property.getJSON());
-
-                RestResponse response;
-
                 try
                 {
-                    response = client.Post(request);
+                    string url = API.uri + "property";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddBody(property.getJSON());
+
+                    var response = client.Post(request);
 
                     var json = response.Content;
                     var values = (JObject)JsonConvert.DeserializeObject(json);
@@ -1193,26 +1151,25 @@ namespace Library
         /// <returns>A boolean indicating whether the file or folder was successfully deleted.</returns>
         public static bool deleteFileFolder(int projectID, int folderID)
         {
-            string url = "https://app.infrakit.com/kuura/api/1/file_folder/delete";
-
-            var client = new RestClient(url);
-
-            var request = new RestRequest();
-
-            request.AddHeader("Authorization", "Bearer " + API.apiKey);
-
-            #region setup parameters
-
-            string parameters = "folders=" + folderID.ToString() + "&files=&links=&projectId=" + projectID.ToString();
-
-            #endregion setup parameters
-
-            request.AddParameter("application/x-www-form-urlencoded", parameters, ParameterType.RequestBody);
-            RestResponse response;
-
             try
             {
-                response = client.Post(request);
+                string url = "https://app.infrakit.com/kuura/api/1/file_folder/delete";
+
+                var client = new RestClient(url);
+
+                var request = new RestRequest();
+
+                request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                #region setup parameters
+
+                string parameters = "folders=" + folderID.ToString() + "&files=&links=&projectId=" + projectID.ToString();
+
+                #endregion setup parameters
+
+                request.AddParameter("application/x-www-form-urlencoded", parameters, ParameterType.RequestBody);
+    
+                var response = client.Post(request);
                 var json = response.Content;
 
                 var values = (JObject)JsonConvert.DeserializeObject(json);
