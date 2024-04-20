@@ -69,7 +69,6 @@
     <sys:String x:Key="api.folder.getImages">Fehler beim Abrufen der Bilder</sys:String>
     <sys:String x:Key="api.folder.getProperties">Fehler beim Abrufen der Eigenschaften des Ordners</sys:String>
 
-
     <!--#endregion folder-->
 
     <!--#region equipment-->
@@ -139,6 +138,8 @@
 
     <sys:String x:Key="api.timeout">Es ist ein Timeout-Fehler aufgetreten</sys:String>
 
+    <sys:String x:Key="api.loadProjects">Projekte konnten nicht geladen werden</sys:String>
+    
     <!--#endregion messages-->
 
     <!--#endregion API-->

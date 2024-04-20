@@ -138,6 +138,8 @@
 
     <sys:String x:Key="api.timeout">A timeout error has occurred</sys:String>
 
+    <sys:String x:Key="api.loadProjects">projects could not be loaded</sys:String>
+
     <!--#endregion messages-->
 
     <!--#endregion API-->

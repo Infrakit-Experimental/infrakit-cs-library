@@ -21,7 +21,15 @@ namespace Library
         #region variables
 
         private static string auth = "https://app.infrakit.com/kuura/";
-        private static string uri = auth + "v1/";
+        private static string uri = API.auth + "v1/";
+        private static Environment _selectedEnv = Environment.Production;
+        public static Environment selectedEnv
+        { 
+            get
+            {
+                return API._selectedEnv;
+            } 
+        }
 
         /// <summary>
         /// The cached API key with the expiration date.
@@ -79,6 +87,34 @@ namespace Library
         public static void clear()
         {
             API.api = null;
+        }
+
+        // TODO: comment
+        public enum Environment
+        {
+            Production,
+            Beta
+        }
+        // TODO: comment
+        public static bool changeEnvironment(Environment env)
+        {
+            if (API._selectedEnv == env) return false;
+
+            API._selectedEnv = env;
+            switch (env)
+            {
+                case Environment.Production:
+                    API.auth = "https://app.infrakit.com/kuura/";
+                    API.uri = API.auth + "v1/";
+                    break;
+
+                case Environment.Beta:
+                    API.auth = "https://beta.infrakit.com/kuura/";
+                    API.uri = API.auth + "v1/";
+                    break;
+            }
+
+            return true;
         }
 
         #region documented endpoints
@@ -207,9 +243,37 @@ namespace Library
                     var values = (JArray)JsonConvert.DeserializeObject(json);
 
                     var projects = new List<Models.Project>();
+                    var count = 0;
                     foreach (var value in values)
                     {
-                        projects.Add(Parse.project(value));
+                        if (!value.HasValues) continue;
+
+                        try
+                        {
+                            projects.Add(Parse.project(value));
+                        }
+                        catch (InvalidCastException ex)
+                        {
+                            count++;
+                            continue;
+                        }
+                    }
+
+                    if (count > 0)
+                    {
+                        var captionKey = "api.project.get";
+                        Log.write(captionKey + ": " + count + " projects could not be loaded");
+
+                        var languages = LibraryUtils.getRDict();
+
+                        var message = count + " " + languages["api.loadProjects"].ToString();
+
+                        MessageBox.Show(
+                            message,
+                            languages[captionKey].ToString(),
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
                     }
 
                     return projects;
@@ -245,7 +309,8 @@ namespace Library
 
                     if (values.SelectToken("status").Value<bool>() == true)
                     {
-                        return Parse.project(values.SelectToken("project").Value<JToken>());
+                        var project = values.SelectToken("project").Value<JToken>();
+                        return Parse.project(project);
                     }
 
                     long errorCode = values.SelectToken("errorCode").Value<long>();
