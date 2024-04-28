@@ -29,6 +29,9 @@
     <sys:String x:Key="settings.title">Einstellungen</sys:String>
     <sys:String x:Key="settings.language">Sprache:</sys:String>
 
+    <sys:String x:Key="settings.env.production">Produktion</sys:String>
+    <sys:String x:Key="settings.env.beta">Beta</sys:String>
+    
     <!--#endregion settings window-->
 
     <!--#endregion windows-->

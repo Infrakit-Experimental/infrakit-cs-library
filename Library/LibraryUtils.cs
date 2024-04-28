@@ -1,13 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Resources;
-using System.Windows;
-using System.Xml;
-using static Library.Utils;
+﻿using System.Windows;
 
 namespace Library
 {
-    internal static class LibraryUtils
+    public static class LibraryUtils
     {
         #region languages
 
@@ -26,13 +21,14 @@ namespace Library
         }
 
         /// <summary>
-        /// Gets the general message for the specified key from the resource dictionary for the current language.
+        /// Gets the general message for the specified key from the resource dictionary for the language.
         /// </summary>
         /// <param name="key">The key of the message to get.</param>
+        /// <param name="language">The language to get the resource dictionary for.</param>
         /// <returns>The message, or null if the message does not exist.</returns>
-        internal static string? getMessage(string key)
+        public static string? getMessage(string key, string? language = null)
         {
-            var rDict = LibraryUtils.getRDict();
+            var rDict = LibraryUtils.getRDict(language);
 
             return rDict[key].ToString();
         }

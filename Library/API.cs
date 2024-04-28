@@ -10,6 +10,7 @@ using System.Windows;
 using System.Security.Cryptography;
 using Library.Models;
 using static Library.Utils;
+using System.Text;
 
 namespace Library
 {
@@ -737,18 +738,28 @@ namespace Library
         {
             #region getUploudURL
 
+            // TODO: comment
+            public enum Status
+            {
+                Successful,
+                Conflict,
+                InvalidExtension,
+                InvalidPath,
+                InvalidFilename
+            }
+
             /// <summary>
             /// Gets the URL for uploading a file to a document.
             /// </summary>
             /// <param name="source">The path to the file to upload.</param>
             /// <param name="target">The UUID of the folder to upload the file to.</param>
             /// <returns>
-            /// A tuple of a bool and a (Uri, Models.Document.Upload, Models.Document) tuple.
-            /// The bool indicates whether the operation was successful (false is returned if the same document already exists).
+            /// A tuple of the status and a (Uri, Models.Document.Upload, Models.Document) tuple.
+            /// The status indicates whether the operation was successful.
             /// The tuple contains the upload URL, the Models.Document.Upload object, and the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            private static (bool status, (Uri url, Models.Document doc, Models.Document.Upload param)? items)? getUploudURL(string source, Guid target)
+            private static (Status status, (Uri url, Models.Document doc, Models.Document.Upload param)? items)? getUploudURL(string source, Guid target)
             {
                 try
                 {
@@ -772,18 +783,31 @@ namespace Library
 
                     var document = Parse.document(value.SelectToken("document").Value<JToken>());
 
-                    return (true, (new Uri(uri), document, param));
+                    return (Status.Successful, (new Uri(uri), document, param));
                 }
                 catch (Exception e)
                 {
+                    API.errorHandling(e, "api.document.getUploudURL", v404: 2, uuid: target);
+
                     var httpExeption = e as HttpRequestException;
-                    if (httpExeption is not null && httpExeption.StatusCode == HttpStatusCode.Conflict)
+                    if (httpExeption is null) return null;
+
+                    if (httpExeption.StatusCode == HttpStatusCode.Conflict)
                     {
-                        API.errorHandling(e, "api.document.getUploudURL", uuid: target);
-                        return (false, null);
+                        return (Status.Conflict, null);
                     }
 
-                    API.errorHandling(e, "api.document.getUploudURL", v404: 2, uuid: target);
+                    #region disable upload for *.exe and *.dll files
+
+                    // TODO: check for these types for upload
+                    if (httpExeption.StatusCode == HttpStatusCode.Forbidden &&
+                        (source.EndsWith(".exe") || source.EndsWith(".dll")))
+                    {
+                        return (Status.InvalidExtension, null);
+                    }
+
+                    #endregion disable upload for *.exe and *.dll files
+
                     return null;
                 }
             }
@@ -794,12 +818,12 @@ namespace Library
             /// <param name="source">The path to the file to upload.</param>
             /// <param name="target">The UUID of the folder to upload the file to.</param>
             /// <returns>
-            /// A tuple of a bool and a Models.Document tuple.
-            /// The bool indicates whether the operation was successful (false is returned if the same document already exists).
+            /// A tuple of the status and a Models.Document tuple.
+            /// The status indicates whether the operation was successful.
             /// The tuple contains the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            public static (bool status, Models.Document? doc)? upload(string source, Guid target)
+            public static (Status status, Models.Document? doc)? upload(string source, Guid target)
             {
                 try
                 {
@@ -807,7 +831,7 @@ namespace Library
 
                     if (!upload.HasValue) return null;
 
-                    if(!upload.Value.status) return (false, null);
+                    if(upload.Value.status != Status.Successful) return (upload.Value.status, null);
 
                     var (url, doc, param) = upload.Value.items.Value;
 
@@ -839,7 +863,7 @@ namespace Library
 
                     HttpWebResponse response = httpRequest.GetResponse() as HttpWebResponse;
 
-                    return (true, doc);
+                    return (Status.Successful, doc);
                 }
                 catch (Exception e)
                 {
@@ -983,15 +1007,64 @@ namespace Library
             /// <param name="source">The UUID of the document to download.</param>
             /// <param name="target">The file path to save the downloaded document to.</param>
             /// <returns>
-            /// A tuple of a bool and a Models.Document tuple.
-            /// The bool indicates whether the operation was successful (false is returned if the same document already exists).
+            /// A tuple of the status and a Models.Document tuple.
+            /// The status indicates whether the operation was successful.
             /// The tuple contains the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            public static (bool status, Models.Document? doc)? download(Guid source, string target)
+            public static (Status status, Models.Document? doc)? download(Guid source, string target)
             {
                 try
                 {
+                    char[] invalidChars = Path.GetInvalidFileNameChars();
+                    if (target.IndexOfAny(invalidChars) >= 0)
+                    {
+                        var language = Utils.Language.getRDict();
+
+                        var message = new StringBuilder(language["file.invalidCharacters.message"].ToString());
+                        message.Append(" [\"");
+                        message.Append(target);
+                        message.Append("\"]: (");
+                        foreach (var c in invalidChars)
+                        {
+                            if (Char.IsControl(c) || Char.IsWhiteSpace(c))
+                            {
+                                message.AppendFormat("\\U{0:X4}, ", (int)c);
+                            }
+                            else
+                            {
+                                message.Append(c);
+                                message.Append(", ");
+                            }
+                        }
+                        message.Length -= 2;
+                        message.Append(")");
+
+                        Utils.Log.write("file.invalidCharacters: \"" + target + "\"");
+                        MessageBox.Show(
+                            message.ToString(),
+                            language["file.invalidCharacters.caption"].ToString(),
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
+
+                        return (Status.InvalidFilename, null);
+                    }
+
+                    if (target.Length > 260)
+                    {
+                        var language = Utils.Language.getRDict();
+                        Utils.Log.write("file.pathToLong: \"" + target + "\"");
+                        MessageBox.Show(
+                            language["file.pathToLong.message"].ToString(),
+                            language["file.pathToLong.caption"].ToString(),
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Error
+                        );
+
+                        return (Status.InvalidPath, null);
+                    }
+
                     var download = API.Document.getDownloadURL(source);
 
                     if (!download.HasValue) return null;
@@ -1025,14 +1098,14 @@ namespace Library
                         fs.Write(bytes, 0, bytes.Length);
                     }
 
-                    return (true, doc);
+                    return (Status.Successful, doc);
                 }
                 catch(HttpRequestException e)
                 {
                     API.errorHandling(e, "api.document.download", v404: 3, uuid: source);
                     if (e.StatusCode == HttpStatusCode.Conflict)
                     {
-                        return (false, null);
+                        return (Status.Conflict, null);
                     }
                     return null;
                 }

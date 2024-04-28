@@ -121,7 +121,10 @@ namespace Library.Models
                 this.folderUuid = folderUuid;
 
                 var extension = Path.GetExtension(filePath);
-                extension = extension.Substring(1);
+                if(extension.Length > 0)
+                {
+                    extension = extension.Substring(1);
+                }
                 
                 if(extension.Equals("geojson", StringComparison.InvariantCultureIgnoreCase))
                 {
