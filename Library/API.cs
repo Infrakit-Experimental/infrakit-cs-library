@@ -90,13 +90,20 @@ namespace Library
             API.api = null;
         }
 
-        // TODO: comment
+        /// <summary>
+        /// The type of envrionments which are supported.
+        /// </summary>
         public enum Environment
         {
             Production,
             Beta
         }
-        // TODO: comment
+
+        /// <summary>
+        /// Changes the current environment to the specified environment and updates the API authentication URI and general URI accordingly.
+        /// </summary>
+        /// <param name="env">The target environment to switch to.</param>
+        /// <returns>True if the environment was successfully changed; otherwise, false.</returns>
         public static bool changeEnvironment(Environment env)
         {
             if (API._selectedEnv == env) return false;
@@ -185,7 +192,11 @@ namespace Library
 
         public static class Project
         {
-            //TODO: comment
+            /// <summary>
+            /// Posts the given APIProject to the specified API URI and returns the unique identifier (UUID) if the request is successful.
+            /// </summary>
+            /// <param name="project">The APIProject object to be posted.</param>
+            /// <returns>The unique identifier (UUID) of the posted project if the request is successful; otherwise, null.</returns>
             public static Guid? post(APIProject project)
             {
                 try
@@ -738,7 +749,9 @@ namespace Library
         {
             #region getUploudURL
 
-            // TODO: comment
+            /// <summary>
+            /// The status which an document api request can have.
+            /// </summary>
             public enum Status
             {
                 Successful,
