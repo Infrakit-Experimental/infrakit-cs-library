@@ -61,6 +61,23 @@ namespace Library
             return parent;
         }
 
+        /// <summary>
+        /// Array of forbidden file extensions that cannot be uploaded to Infrakit.
+        /// </summary>
+        public static readonly string[] forbiddenFileExtensions =
+        {
+            ".bat",
+            ".cmd",
+            ".dll",
+            ".exe",
+            ".jar",
+            ".js",
+            ".msi",
+            ".sh",
+            ".so",
+            ".vbs"
+        };
+
         #region log in
 
         /// <summary>
@@ -98,7 +115,7 @@ namespace Library
             }
             catch (CryptographicException e)
             {
-                Log.write(e.ToString());
+                Log.write("utils.error.protectData: " + e.ToString());
                 return null;
             }
         }
@@ -121,7 +138,7 @@ namespace Library
             }
             catch (CryptographicException e)
             {
-                Log.write(e.ToString());
+                Log.write("utils.error.unprotectData: " + e.ToString());
                 return null;
             }
         }
@@ -150,11 +167,6 @@ namespace Library
             /// </summary>
             public static void create()
             {
-                if (!Directory.Exists(Path.GetDirectoryName(Utils.Resources.path)))
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(Utils.Resources.path));
-                }
-
                 XmlDocument doc = new XmlDocument();
                 var root = doc.CreateElement("body");
                 doc.AppendChild(root);
@@ -162,7 +174,7 @@ namespace Library
                 XmlDeclaration xmlDeclaration = doc.CreateXmlDeclaration("1.0", "utf-8", null);
                 doc.InsertBefore(xmlDeclaration, doc.DocumentElement);
 
-                doc.Save(Utils.Resources.path);
+                doc.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -223,7 +235,7 @@ namespace Library
 
                 node.AppendChild(resources.CreateTextNode(parameter));
 
-                resources.Save(Resources.path);
+                resources.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -241,7 +253,7 @@ namespace Library
 
                 node.AppendChild(parameter);
 
-                resources.Save(Utils.Resources.path);
+                resources.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -257,7 +269,7 @@ namespace Library
 
                 node.AppendChild(parameter);
 
-                resources.Save(Utils.Resources.path);
+                resources.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -287,7 +299,7 @@ namespace Library
                     node.Attributes.Append(attributeNode);
                 }
 
-                resources.Save(Utils.Resources.path);
+                resources.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -304,7 +316,7 @@ namespace Library
 
                 parent.RemoveChild(remove);
 
-                resources.Save(Utils.Resources.path);
+                resources.secureSave(Resources.directory, Resources.path);
             }
 
             /// <summary>
@@ -343,7 +355,7 @@ namespace Library
                     node.Value = parameter;
                     settingNode.Attributes.Append(node);
 
-                    resources.Save(Resources.path);
+                    resources.secureSave(Resources.directory, Resources.path);
                 }
 
                 /// <summary>
@@ -361,7 +373,7 @@ namespace Library
                     node.Value = parameter;
                     settingNode.Attributes.Append(node);
 
-                    resources.Save(Resources.path);
+                    resources.secureSave(Resources.directory, Resources.path);
                 }
             }
         }
@@ -393,11 +405,6 @@ namespace Library
                 XmlNode root;
                 if (!File.Exists(Settings.path))
                 {
-                    if (!Directory.Exists(Path.GetDirectoryName(Settings.path)))
-                    {
-                        Directory.CreateDirectory(Path.GetDirectoryName(Settings.path));
-                    }
-
                     root = doc.CreateElement("body");
                     doc.AppendChild(root);
 
@@ -441,7 +448,7 @@ namespace Library
 
                 if (save)
                 {
-                    doc.Save(Settings.path);
+                    doc.secureSave(Resources.directory, Settings.path);
                 }
 
                 return doc;
@@ -476,7 +483,7 @@ namespace Library
 
                 node.AppendChild(resources.CreateTextNode(parameter));
 
-                resources.Save(Settings.path);
+                resources.secureSave(Resources.directory, Settings.path);
             }
 
             /// <summary>
@@ -511,7 +518,7 @@ namespace Library
 
                 node.AppendChild(resources.CreateTextNode(parameter));
 
-                resources.Save(Settings.path);
+                resources.secureSave(Resources.directory, Settings.path);
             }
 
             /// <summary>
@@ -545,7 +552,7 @@ namespace Library
                 node.Value = parameter;
                 settingNode.Attributes.Append(node);
 
-                resources.Save(Settings.path);
+                resources.secureSave(Resources.directory, Settings.path);
             }
 
             /// <summary>
@@ -563,7 +570,7 @@ namespace Library
                 node.Value = parameter;
                 settingNode.Attributes.Append(node);
 
-                resources.Save(Settings.path);
+                resources.secureSave(Resources.directory, Settings.path);
             }
         }
 
@@ -618,14 +625,14 @@ namespace Library
                 }
                 catch (Exception ex)
                 {
-                    Log.write("utils.errorSettings.getLanguage: " + ex.GetType() + " | " + ex.Message);
+                    Log.write("error.loading.language: " + ex.GetType() + " | " + ex.Message);
 
                     Settings.@override("language", "en");
 
-                    var languages = Utils.Language.getRDict();
+                    var languages = LibraryUtils.getRDict();
                     MessageBox.Show(
-                        languages["settings.errorLoading.message"].ToString(),
-                        languages["settings.errorLoading.caption"].ToString(),
+                        languages["error.loading.message"].ToString(),
+                        languages["error.loading.caption"].ToString(),
                         MessageBoxButton.OK,
                         MessageBoxImage.Error
                     );
@@ -707,7 +714,7 @@ namespace Library
         /// <summary>
         /// A class for logging application messages.
         /// </summary>
-        public class Log
+        public static class Log
         {
             /// <summary>
             /// The path to the logging directory.
@@ -720,20 +727,33 @@ namespace Library
             /// <param name="log">The log message to write.</param>
             public static void write(string log)
             {
-                if (!Utils.logs) return;
-
-                var now = DateTime.Now;
-
-                if(!Directory.Exists(Log.directory))
+                try
                 {
-                    Directory.CreateDirectory(Log.directory);
+                    if (!Utils.logs) return;
+
+                    var now = DateTime.Now;
+
+                    if (!Directory.Exists(Log.directory))
+                    {
+                        Directory.CreateDirectory(Log.directory);
+                    }
+
+                    var source = Path.Combine(Log.directory, now.ToString("yyyyMMdd") + ".log");
+
+                    using (StreamWriter sw = File.AppendText(source))
+                    {
+                        sw.WriteLine(now.ToString("HH:mm:ss") + ": " + log);
+                    }
                 }
-
-                var source = Path.Combine(Log.directory, now.ToString("yyyyMMdd") + ".log");
-
-                using (StreamWriter sw = File.AppendText(source))
+                catch
                 {
-                    sw.WriteLine(now.ToString("HH:mm:ss") + ": " + log);
+                    var languages = LibraryUtils.getRDict();
+                    MessageBox.Show(
+                        languages["error.saving.message"].ToString(),
+                        languages["error.saving.caption"].ToString(),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error
+                    );
                 }
             }
 
@@ -764,6 +784,31 @@ namespace Library
         }
 
         #endregion log
+
+        public static void secureSave(this XmlDocument resources, string directory, string path)
+        {
+            try
+            {
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                resources.Save(path);
+            }
+            catch (Exception ex)
+            {
+                Log.write("utils.error.saving: " + ex.GetType() + " | " + ex.Message);
+
+                var languages = LibraryUtils.getRDict();
+                MessageBox.Show(
+                    languages["error.saving.message"].ToString(),
+                    languages["error.saving.caption"].ToString(),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }
+        }
 
         /// <summary>
         /// A class that displays a message box that automatically closes after a specified timeout.

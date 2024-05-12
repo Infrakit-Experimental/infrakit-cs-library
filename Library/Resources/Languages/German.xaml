@@ -8,7 +8,23 @@
     <sys:String x:Key="ok">OK</sys:String>
     <sys:String x:Key="cancel">Abbruch</sys:String>
 
+    <sys:String x:Key="error.saving.caption">Fehler beim speichern</sys:String>
+    <sys:String x:Key="error.saving.message">Die Resource konnte nicht gespeichert werden</sys:String>
+
+    <sys:String x:Key="error.loading.caption">Fehler beim laden</sys:String>
+    <sys:String x:Key="error.loading.message">Die Resource konnte nicht geladen werden</sys:String>
+
     <!--#endregion general-->
+
+    <!--#region download path-->
+
+    <sys:String x:Key="file.invalidCharacters.caption">Lokaler Dateiname</sys:String>
+    <sys:String x:Key="file.invalidCharacters.message">Der lokale Pfad enthält ungültige Zeichen</sys:String>
+
+    <sys:String x:Key="file.pathToLong.caption">Lokaler Dateipfad</sys:String>
+    <sys:String x:Key="file.pathToLong.message">Der lokale Pfad ist zu lang</sys:String>
+
+    <!--#endregion download path-->
 
     <!--#region windows-->
 
@@ -31,7 +47,7 @@
 
     <sys:String x:Key="settings.env.production">Produktion</sys:String>
     <sys:String x:Key="settings.env.beta">Beta</sys:String>
-    
+
     <!--#endregion settings window-->
 
     <!--#endregion windows-->

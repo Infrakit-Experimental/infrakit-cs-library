@@ -11,6 +11,9 @@ using System.Security.Cryptography;
 using Library.Models;
 using static Library.Utils;
 using System.Text;
+using Library.Resources;
+using System.Windows.Interop;
+using System.Linq;
 
 namespace Library
 {
@@ -810,18 +813,17 @@ namespace Library
                         return (Status.Conflict, null);
                     }
 
-                    #region disable upload for *.exe and *.dll files
+                    #region check for forbidden file extensions
 
-                    // TODO: check for these types for upload
-                    if (httpExeption.StatusCode == HttpStatusCode.Forbidden &&
-                        (source.EndsWith(".exe") || source.EndsWith(".dll")))
-                    {
-                        return (Status.InvalidExtension, null);
-                    }
+                    if (httpExeption.StatusCode != HttpStatusCode.Forbidden) return null;
+                    
+                    string fileExtension = Path.GetExtension(source);
 
-                    #endregion disable upload for *.exe and *.dll files
+                    if (!Utils.forbiddenFileExtensions.Contains(fileExtension)) return null;
 
-                    return null;
+                    return (Status.InvalidExtension, null);
+
+                    #endregion check for forbidden file extensions
                 }
             }
 
@@ -1019,20 +1021,38 @@ namespace Library
             /// </summary>
             /// <param name="source">The UUID of the document to download.</param>
             /// <param name="target">The file path to save the downloaded document to.</param>
+            /// <param name="targetFileName">The file name of the document to be downloaded.</param>
             /// <returns>
             /// A tuple of the status and a Models.Document tuple.
             /// The status indicates whether the operation was successful.
             /// The tuple contains the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            public static (Status status, Models.Document? doc)? download(Guid source, string target)
+            public static (Status status, Models.Document? doc)? download(Guid source, string target, string targetFileName)
             {
                 try
                 {
-                    char[] invalidChars = Path.GetInvalidFileNameChars();
-                    if (target.IndexOfAny(invalidChars) >= 0)
+                    #region invalid path / file name
+
+                    var invalidFileNameChars = Path.GetInvalidFileNameChars();
+                    var invalidPathChars     = Path.GetInvalidPathChars();
+
+                    bool invalidFileName = targetFileName.IndexOfAny(invalidFileNameChars) >= 0;
+                    var invalidPath      = targetFileName.IndexOfAny(invalidPathChars) >= 0;
+
+                    if (invalidFileName || invalidPath)
                     {
-                        var language = Utils.Language.getRDict();
+                        var language = LibraryUtils.getRDict();
+
+                        char[] invalidChars;
+                        if (invalidFileName)
+                        {
+                            invalidChars = invalidFileNameChars;
+                        }
+                        else
+                        {
+                            invalidChars = invalidPathChars;
+                        }
 
                         var message = new StringBuilder(language["file.invalidCharacters.message"].ToString());
                         message.Append(" [\"");
@@ -1064,6 +1084,10 @@ namespace Library
                         return (Status.InvalidFilename, null);
                     }
 
+                    #endregion invalid path / file name
+
+                    #region invalid path length
+
                     if (target.Length > 260)
                     {
                         var language = Utils.Language.getRDict();
@@ -1077,6 +1101,8 @@ namespace Library
 
                         return (Status.InvalidPath, null);
                     }
+
+                    #endregion invalid path length
 
                     var download = API.Document.getDownloadURL(source);
 
