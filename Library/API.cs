@@ -1429,6 +1429,19 @@ namespace Library
             var httpExeption = e as HttpRequestException;
             var statusCode = httpExeption.StatusCode;
 
+            if (statusCode is null)
+            {
+                Log.write(captionKey + ": " + e.GetType() + " | " + e.Message);
+                Utils.AutoClosingMessageBox.Show(
+                    language["api.default"].ToString(),
+                    caption,
+                    MessageBoxImage.Error,
+                    API.maxErrorDisplayTime,
+                    API.newErrorThread
+                );
+                return;
+            }
+
             string logMessage;
             string mBText;
 
