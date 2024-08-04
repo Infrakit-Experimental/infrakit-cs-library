@@ -693,8 +693,14 @@ namespace Library
                 return rDict[key].ToString();
             }
 
-            public static string getFormatedDate(DateTime dt)
+            // TODO: comment
+            public static string getFormatedDate(DateTime dt, TimeZoneInfo? utc)
             {
+                if (utc != null)
+                {
+                    dt = TimeZoneInfo.ConvertTime(dt, TimeZoneInfo.Utc, utc);
+                }
+
                 switch (Language.get())
                 {
                     case "de":
@@ -703,6 +709,25 @@ namespace Library
                     case "en":
                     default:
                         return dt.ToString("ddd. MM/dd/yyyy", CultureInfo.CreateSpecificCulture("en-US"));
+                }
+            }
+
+            // TODO: comment
+            public static string getFormatedDateTime(DateTime dt, TimeZoneInfo? utc)
+            {
+                if (utc != null)
+                {
+                    dt = TimeZoneInfo.ConvertTime(dt, TimeZoneInfo.Utc, utc);
+                }
+
+                switch (Language.get())
+                {
+                    case "de":
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("de-DE"));
+
+                    case "en":
+                    default:
+                        return dt.ToString("ddd. MM/dd/yyyy hh:mm tt (UTCzzz)", CultureInfo.CreateSpecificCulture("en-US"));
                 }
             }
         }
