@@ -693,8 +693,16 @@ namespace Library
                 return rDict[key].ToString();
             }
 
-            // TODO: comment
-            public static string getFormatedDate(DateTime dt, TimeZoneInfo? utc)
+            /// <summary>
+            /// Method to convert a timestamp (date only) to a string.
+            /// </summary>
+            /// <param name="dt">Timestamp</param>
+            /// <param name="utc">Optional time zone information</param>
+            /// <returns>Date of timestamp as string</returns>
+            /// <remarks>
+            /// This method covers language-specific formatting.
+            /// </remarks>
+            public static string getFormatedDate(DateTime dt, TimeZoneInfo? utc = null)
             {
                 if (utc != null)
                 {
@@ -712,7 +720,15 @@ namespace Library
                 }
             }
 
-            // TODO: comment
+            /// <summary>
+            /// Method to convert a timestamp (date and time) to a string.
+            /// </summary>
+            /// <param name="dt">Timestamp</param>
+            /// <param name="utc">Optional time zone information</param>
+            /// <returns>Date and time of timestamp as string</returns>
+            /// <remarks>
+            /// This method covers language-specific formatting.
+            /// </remarks>
             public static string getFormatedDateTime(DateTime dt, TimeZoneInfo? utc)
             {
                 if (utc != null)
