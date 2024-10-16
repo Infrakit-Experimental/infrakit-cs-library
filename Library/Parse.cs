@@ -55,6 +55,7 @@ namespace Library
         /// <returns>A Document object.</returns>
         internal static Document document(JToken value)
         {
+            var tmp = value.SelectToken("uuid").Value<string>();
             var docUuid = new Guid(value.SelectToken("uuid").Value<string>());
             var name = value.SelectToken("name").Value<string>();
 
@@ -70,10 +71,10 @@ namespace Library
             if (propertiesValue is not null)
             {
                 properties = new();
-                foreach (var propertie in propertiesValue)
+                foreach (var property in propertiesValue)
                 {
-                    var propKey = propertie.SelectToken("key").Value<string>();
-                    var propValue = propertie.SelectToken("value").Value<String>();
+                    var propKey = property.SelectToken("key").Value<string>();
+                    var propValue = property.SelectToken("value").Value<String>();
 
                     if (propValue.StartsWith('['))
                     {
@@ -88,9 +89,9 @@ namespace Library
                     else
                     {
                         properties[propKey] = new List<string>()
-                            {
-                                propValue
-                            };
+                        {
+                            propValue
+                        };
                     }
                 }
             }

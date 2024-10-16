@@ -672,6 +672,10 @@ namespace Library
                         dict.Source = new Uri(path + "German.xaml", UriKind.RelativeOrAbsolute);
                         break;
 
+                    case "fr":
+                        dict.Source = new Uri(path + "French.xaml", UriKind.RelativeOrAbsolute);
+                        break;
+
                     case "en":
                     default:
                         dict.Source = new Uri(path + "English.xaml", UriKind.RelativeOrAbsolute);
@@ -714,6 +718,9 @@ namespace Library
                     case "de":
                         return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("de-DE"));
 
+                    case "fr":
+                        return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("fr-FR"));
+
                     case "en":
                     default:
                         return dt.ToString("ddd. MM/dd/yyyy", CultureInfo.CreateSpecificCulture("en-US"));
@@ -740,6 +747,9 @@ namespace Library
                 {
                     case "de":
                         return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("de-DE"));
+
+                    case "fr":
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fr-FR"));
 
                     case "en":
                     default:
