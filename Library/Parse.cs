@@ -49,13 +49,26 @@ namespace Library
         }
 
         /// <summary>
+        /// Parses a JSON object into a User object.
+        /// </summary>
+        /// <param name="value">The JSON object to parse.</param>
+        /// <returns>A User object.</returns>
+        internal static User user(JToken value)
+        {
+            var uuid = new Guid(value.SelectToken("uuid").Value<string>());
+            var username = value.SelectToken("username").Value<string>();
+            var email = value.SelectToken("email").Value<string>();
+
+            return new User(uuid, username, email);
+        }
+
+        /// <summary>
         /// Parses a JSON object into a Document object.
         /// </summary>
         /// <param name="value">The JSON object to parse.</param>
         /// <returns>A Document object.</returns>
         internal static Document document(JToken value)
         {
-            var tmp = value.SelectToken("uuid").Value<string>();
             var docUuid = new Guid(value.SelectToken("uuid").Value<string>());
             var name = value.SelectToken("name").Value<string>();
 

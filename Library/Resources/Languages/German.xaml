@@ -78,6 +78,12 @@
 
     <!--#endregion project-->
 
+    <!--#region user-->
+
+    <sys:String x:Key="api.user.getByOrganization">Fehler beim Abrufen der Benutzer der Organization</sys:String>
+
+    <!--#endregion user-->
+    
     <!--#region folder-->
 
     <sys:String x:Key="api.folder.get">Fehler beim Abrufen der Ordner und/oder Dokumente</sys:String>
@@ -89,6 +95,13 @@
     <sys:String x:Key="api.folder.getProperties">Fehler beim Abrufen der Eigenschaften des Ordners</sys:String>
 
     <!--#endregion folder-->
+
+    <!--#region group-->
+
+    <sys:String x:Key="api.group.post">Fehler beim Erstellen der Gruppe</sys:String>
+    <sys:String x:Key="api.group.addUsers">Fehler beim Hinzufügen der Benutzer zur Gruppe</sys:String>
+
+    <!--#endregion group-->
 
     <!--#region equipment-->
 
@@ -148,8 +161,11 @@
     <sys:String x:Key="api.404.2">Ordner existiert nicht</sys:String>
     <sys:String x:Key="api.404.3">Dokument existiert nicht</sys:String>
     <sys:String x:Key="api.404.4">Aufgabe nicht in der Datenbank gefunden</sys:String>
+    <sys:String x:Key="api.404.5">Organisation existiert nicht</sys:String>
+    <sys:String x:Key="api.404.6">Der Benutzer existiert nicht</sys:String>
 
-    <sys:String x:Key="api.409">Das identische Dokument existiert bereits</sys:String>
+    <sys:String x:Key="api.409.1">Das identische Dokument existiert bereits</sys:String>
+    <sys:String x:Key="api.409.2">Gruppe mit gleichem Namen, Organisations-Uuid und Projekt-Uuid existiert bereits</sys:String>
 
     <sys:String x:Key="api.500">Die interne Infrakit-Ressource ist fehlgeschlagen</sys:String>
 

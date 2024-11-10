@@ -14,6 +14,8 @@ using System.Text;
 using Library.Resources;
 using System.Windows.Interop;
 using System.Linq;
+using System.Xml.Linq;
+using System.Windows.Media.TextFormatting;
 
 namespace Library
 {
@@ -212,6 +214,8 @@ namespace Library
 
                     request.AddHeader("Authorization", "Bearer " + API.apiKey);
 
+                    var tmp = JsonConvert.SerializeObject(project);
+
                     request.AddBody(JsonConvert.SerializeObject(project));
 
                     var response = client.Post(request);
@@ -384,6 +388,76 @@ namespace Library
                 catch (Exception e)
                 {
                     API.errorHandling(e, "api.project.getFolders", uuid: uuid);
+                    return null;
+                }
+            }
+        }
+
+        public static class User
+        {
+            // TODO: comment
+            public static Models.User? get(Guid uuid)
+            {
+                try
+                {
+                    string url = API.uri + "user/" + uuid.ToString();
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    return Parse.user(values);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.user.getByOrganization", v400: 2, v403: 3, v404: 6, uuid: uuid);
+                    return null;
+                }
+            }
+
+            // TODO: comment
+            public static List<Models.User>? getByOrganization(Guid organizationUuid)
+            {
+                try
+                {
+                    string url = API.uri + "users/by-organization/" + organizationUuid.ToString();
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Get(request);
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        List<Models.User> users = new();
+
+                        foreach (var value in values.SelectToken("users").Value<JArray>())
+                        {
+                            users.Add(Parse.user(value));
+                        }
+
+                        return users;
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.user.getByOrganization", v404: 4, uuid: organizationUuid);
                     return null;
                 }
             }
@@ -703,6 +777,117 @@ namespace Library
                 {
                     API.errorHandling(e, "api.folder.getProperties", v400: 2, v403: 3);
                     return null;
+                }
+            }
+        }
+
+        public static class Group
+        {
+            // TODO: comment
+            public static Guid? post(string name, Guid projectUuid)
+            {
+                try
+                {
+                    string url = API.uri + "group";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("projectUuid", projectUuid.ToString());
+                    request.AddParameter("name", name);
+
+                    var response = client.Post(request);
+
+                    var json = response.Content;
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        var group = values.SelectToken("group").Value<JToken>();
+                        var uuid = group.SelectToken("uuid").Value<string>();
+                        return new Guid(uuid);
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.group.post", v400: 2, v403: 3, v409: 2);
+                    return null;
+                }
+            }
+
+            // TODO: comment
+            public static bool addUsers(Guid groupUuid, List<Guid> users)
+            { // TODO: check functionallity
+                try
+                {
+                    string url = API.uri + "group/" + groupUuid.ToString() + "/users";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var tmp = JsonConvert.SerializeObject(users);
+
+                    request.AddBody(JsonConvert.SerializeObject(users));
+
+                    var response = client.Post(request);
+
+                    var json = response.Content;
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        return true;
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.group.addUsers", v400: 2, v403: 3, v409: 2);
+                    return false;
+                }
+            }
+
+            // TODO: comment
+            public static bool addUser(Guid groupUuid, Guid userUuid)
+            { // TODO: check functionallity
+                try
+                {
+                    string url = API.uri + "group/" + groupUuid.ToString() + "/users/" + userUuid.ToString();
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Put(request);
+
+                    var json = response.Content;
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        return true;
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.group.addUsers", v400: 2, v403: 3, v409: 2);
+                    return false;
                 }
             }
         }
@@ -1378,8 +1563,9 @@ namespace Library
         /// <param name="v400">The index of the 400 Bad Request error message.</param>
         /// <param name="v403">The index of the 403 Forbidden error message.</param>
         /// <param name="v404">The index of the 404 Not Found error message.</param>
+        /// <param name="v409">The index of the 409 Conflict error message.</param>
         /// <param name="uuid">An optional UUID to include in the error message.</param>
-        private static void errorHandling(Exception e, string captionKey, int v400 = 1, int v403 = 1, int v404 = 1, Guid? uuid = null)
+        private static void errorHandling(Exception e, string captionKey, int v400 = 1, int v403 = 1, int v404 = 1, int v409 = 1, Guid? uuid = null)
         {
             var language = LibraryUtils.getRDict();
             var caption = language[captionKey].ToString();
@@ -1479,7 +1665,7 @@ namespace Library
                     break;
 
                 case HttpStatusCode.Conflict:
-                    mBText = language["api.409"].ToString();
+                    mBText = language["api.409." + v409].ToString();
                     break;
 
                 case HttpStatusCode.InternalServerError:

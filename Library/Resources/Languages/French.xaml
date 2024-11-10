@@ -78,6 +78,12 @@
 
     <!--#endregion project-->
 
+    <!--#region user-->
+
+    <sys:String x:Key="api.user.getByOrganization">Erreur lors de la récupération des utilisateurs de l'organisation</sys:String>
+
+    <!--#endregion user-->
+
     <!--#region folder-->
 
     <sys:String x:Key="api.folder.get">Erreur lors de la récupération des dossiers et/ou documents</sys:String>
@@ -89,6 +95,13 @@
     <sys:String x:Key="api.folder.getProperties">Erreur lors de la récupération des propriétés du dossier</sys:String>
 
     <!--#endregion folder-->
+
+    <!--#region group-->
+
+    <sys:String x:Key="api.group.post">Erreur lors de la création du groupe</sys:String>
+    <sys:String x:Key="api.group.addUsers">Erreur lors de l'ajout des utilisateurs au groupe</sys:String>
+
+    <!--#endregion group-->
 
     <!--#region equipment-->
 
@@ -148,8 +161,11 @@
     <sys:String x:Key="api.404.2">Le dossier n'existe pas</sys:String>
     <sys:String x:Key="api.404.3">Le document n'existe pas</sys:String>
     <sys:String x:Key="api.404.4">Affectation non trouvée dans la base de données</sys:String>
+    <sys:String x:Key="api.404.5">Le organisation n'existe pas</sys:String>
+    <sys:String x:Key="api.404.6">Le utilisateur n'existe pas</sys:String>
 
-    <sys:String x:Key="api.409">Le document identique existe déjà</sys:String>
+    <sys:String x:Key="api.409.1">Le document identique existe déjà</sys:String>
+    <sys:String x:Key="api.409.2">Un groupe avec le même nom, le même organizationUuid et le même projectUuid existe déjà</sys:String>
 
     <sys:String x:Key="api.500">Échec de la ressource interne d'Infrakit</sys:String>
 

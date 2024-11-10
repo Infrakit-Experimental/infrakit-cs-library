@@ -78,6 +78,12 @@
 
     <!--#endregion project-->
 
+    <!--#region user-->
+
+    <sys:String x:Key="api.user.getByOrganization">Error retrieving the users of the organization</sys:String>
+
+    <!--#endregion user-->
+
     <!--#region folder-->
 
     <sys:String x:Key="api.folder.get">Error retrieving the folders and/or documents</sys:String>
@@ -89,6 +95,13 @@
     <sys:String x:Key="api.folder.getProperties">Error retrieving the properties of the folder</sys:String>
 
     <!--#endregion folder-->
+
+    <!--#region group-->
+
+    <sys:String x:Key="api.group.post">Error creating the group</sys:String>
+    <sys:String x:Key="api.group.addUsers">Error adding the users to the group</sys:String>
+
+    <!--#endregion group-->
 
     <!--#region equipment-->
 
@@ -148,8 +161,11 @@
     <sys:String x:Key="api.404.2">Folder does not exist</sys:String>
     <sys:String x:Key="api.404.3">Document does not exist</sys:String>
     <sys:String x:Key="api.404.4">Assignment not found in database</sys:String>
+    <sys:String x:Key="api.404.5">Organization does not exist</sys:String>
+    <sys:String x:Key="api.404.6">The user does not exist</sys:String>
 
-    <sys:String x:Key="api.409">The identical document already exists</sys:String>
+    <sys:String x:Key="api.409.1">The identical document already exists</sys:String>
+    <sys:String x:Key="api.409.2">Group with same name, organizationUuid, and projectUuid already exists</sys:String>
 
     <sys:String x:Key="api.500">Infrakit internal resource failed</sys:String>
 
