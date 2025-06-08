@@ -81,28 +81,51 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center"/>
 
-        <!-- The password border. -->
-        <Rectangle
+        <!-- The password text box with the shown password. -->
+        <TextBox
             Grid.Column="1"
             Grid.Row="1"
+            x:Name="tbxPasswordShown"
             Margin="5"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
-            Stroke="#FFABADB3"
-            RadiusX="3"
-            RadiusY="3"/>
+            Visibility="Collapsed"/>
 
-        <!-- The password text box. -->
+        <!-- The password text box with the hidden password. -->
         <PasswordBox
             Grid.Column="1"
             Grid.Row="1"
-            x:Name="tbxPassword"
+            x:Name="tbxPasswordHidden"
             Margin="5"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            BorderBrush="{x:Null}"
-            Background="{x:Null}"/>
+            VerticalAlignment="Stretch"/>
 
+        <!-- Show / Hide passwort -->
+        <Button
+            Grid.Column="1"
+            Grid.Row="1"
+            x:Name="btnShowHidePassword"
+            Style="{StaticResource IKSecondarySubtleIcon}"
+            Margin="6"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Stretch"
+            Click="btnShowHidePassword_Click">
+
+            <Button.Width>
+                
+                <Binding
+                    Path="ActualHeight"
+                    RelativeSource="{RelativeSource Self}"/>
+                
+            </Button.Width>
+
+            <Image
+                x:Name="imgShowHidePassword"
+                Source="pack://application:,,,/Library;component/Resources/Icons/Show.ico"
+                Stretch="UniformToFill"/>
+
+        </Button>
+        
         <!--#endregion password-->
 
         <!-- The remember me checkbox. -->
@@ -121,7 +144,7 @@
             Grid.ColumnSpan="2"
             x:Name="btnLogIn"
             Content="{DynamicResource logIn.logIn}"
-            Style="{StaticResource BaseButtonStyle}"
+            Style="{StaticResource IKPrimaryButton}"
             Margin="5"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"

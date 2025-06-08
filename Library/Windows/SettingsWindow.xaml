@@ -139,10 +139,10 @@
 
             <!-- This button clicks to save the settings and close the window. -->
             <Button
-                Grid.Column="0"
+                Grid.Column="1"
                 x:Name="btnOk"
                 Content="{DynamicResource ok}"
-                Style="{StaticResource BaseButtonStyle}"
+                Style="{StaticResource IKPrimaryButton}"
                 Margin="5"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
@@ -150,10 +150,10 @@
 
             <!-- This button clicks to close the window without saving the settings. -->
             <Button
-                Grid.Column="1"
+                Grid.Column="0"
                 x:Name="btnCancel"
                 Content="{DynamicResource cancel}"
-                Style="{StaticResource BaseButtonStyle}"
+                Style="{StaticResource IKSecondaryButton}"
                 Margin="5"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"

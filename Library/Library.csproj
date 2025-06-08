@@ -7,8 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Icons\calendar.ico" />
+    <None Remove="Resources\Icons\Down.ico" />
+    <None Remove="Resources\Icons\Hide.ico" />
+    <None Remove="Resources\Icons\logo-icon-orange.svg" />
+    <None Remove="Resources\Icons\Logo.svg" />
     <None Remove="Resources\Icons\Settings.ico" />
+    <None Remove="Resources\Icons\Show.ico" />
+    <None Remove="Resources\Icons\ToolTip.ico" />
+    <None Remove="Resources\Icons\Up.ico" />
     <None Remove="Windows\Logo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Icons\calendar.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
@@ -18,10 +32,25 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\Icons\Down.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Hide.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Resources\Icons\Logo.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\Icons\Settings.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Show.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\ToolTip.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Up.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

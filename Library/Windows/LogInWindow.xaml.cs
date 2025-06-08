@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using static Library.Utils;
 
 namespace Library.InputWindows
@@ -59,7 +60,7 @@ namespace Library.InputWindows
                 var protectedPassword = Settings.get("password");
 
                 /// Unprotects the password from to the value stored in the settings file and set it into the password text box.
-                this.tbxPassword.Password = Utils.unprotectData(protectedPassword);
+                this.tbxPasswordHidden.Password = Utils.unprotectData(protectedPassword);
             }
             catch (Exception ex)
             {
@@ -94,7 +95,7 @@ namespace Library.InputWindows
         /// <param name="e">The event arguments.</param>
         private void btnLogIn_Click(object sender, RoutedEventArgs e)
         {
-            if (!API.setAPIKey(this.tbxUsername.Text, this.tbxPassword.Password)) return;
+            if (!API.setAPIKey(this.tbxUsername.Text, this.getPassword())) return;
 
             if (this.cbRemeberMe.IsChecked == true)
             {
@@ -108,7 +109,7 @@ namespace Library.InputWindows
                     Settings.set("username");
                 }
 
-                var protectedPassword = Utils.protectData(this.tbxPassword.Password);
+                var protectedPassword = Utils.protectData(this.getPassword());
                 if(protectedPassword is not null)
                 {
                     Settings.set("password", protectedPassword);
@@ -145,6 +146,44 @@ namespace Library.InputWindows
             }
         }
 
+        //TODO: comment listener
+        private void btnShowHidePassword_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.tbxPasswordHidden.Visibility == Visibility.Visible)
+            {
+                this.tbxPasswordHidden.Visibility = Visibility.Collapsed;
+                this.tbxPasswordShown.Visibility  = Visibility.Visible;
+
+                this.tbxPasswordShown.Text      = this.tbxPasswordHidden.Password;
+                this.tbxPasswordHidden.Password = "";
+
+
+                this.imgShowHidePassword.Source = new BitmapImage(new Uri("pack://application:,,,/Library;component/Resources/Icons/Hide.ico"));
+            }
+            else
+            {
+                this.tbxPasswordHidden.Visibility = Visibility.Visible;
+                this.tbxPasswordShown.Visibility = Visibility.Collapsed;
+
+                this.tbxPasswordHidden.Password = this.tbxPasswordShown.Text;
+                this.tbxPasswordShown.Text = "";
+
+                this.imgShowHidePassword.Source = new BitmapImage(new Uri("pack://application:,,,/Library;component/Resources/Icons/Show.ico"));
+            }
+        }
+
         #endregion listeners
+
+        private string getPassword()
+        {
+            if (this.tbxPasswordHidden.Visibility == Visibility.Visible)
+            {
+                return this.tbxPasswordHidden.Password;
+            }
+            else
+            {
+                return this.tbxPasswordShown.Text;
+            }
+        }
     }
 }

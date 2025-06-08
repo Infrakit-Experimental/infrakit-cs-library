@@ -214,8 +214,6 @@ namespace Library
 
                     request.AddHeader("Authorization", "Bearer " + API.apiKey);
 
-                    var tmp = JsonConvert.SerializeObject(project);
-
                     request.AddBody(JsonConvert.SerializeObject(project));
 
                     var response = client.Post(request);
@@ -823,7 +821,7 @@ namespace Library
 
             // TODO: comment
             public static bool addUsers(Guid groupUuid, List<Guid> users)
-            { // TODO: check functionallity
+            {
                 try
                 {
                     string url = API.uri + "group/" + groupUuid.ToString() + "/users";
