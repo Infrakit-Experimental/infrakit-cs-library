@@ -8,6 +8,8 @@ using System.Threading;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Library
 {
@@ -25,6 +27,41 @@ namespace Library
         /// The currently active user.
         /// </summary>
         public static string activeUser { get; internal set; }
+
+        #region folder tree
+
+        public class FolderViewModel
+        {
+            public string name { get; set; }
+            public Guid uuid { get; set; }
+            public ObservableCollection<FolderViewModel> children { get; set; }
+
+            public static FolderViewModel? BuildFolderTree(List<Models.Folder> folders)
+            {
+                var lookup = folders.ToDictionary(f => f.uuid, f => new FolderViewModel
+                {
+                    name = f.name,
+                    uuid = f.uuid,
+                    children = new ObservableCollection<FolderViewModel>()
+                });
+
+                FolderViewModel? roots = null;
+
+                foreach (var folder in folders)
+                {
+                    if (folder.parentFolderUuid == null)
+                    {
+                        roots = lookup[folder.uuid];
+                    }
+                    else if (lookup.TryGetValue(folder.parentFolderUuid.Value, out var parent))
+                    {
+                        parent.children.Add(lookup[folder.uuid]);
+                    }
+                }
+
+                return roots;
+            }
+        }
 
         /// <summary>
         /// Adds child tree nodes to the specified tree view item.
@@ -60,6 +97,8 @@ namespace Library
 
             return parent;
         }
+
+        #endregion folder tree
 
         /// <summary>
         /// Array of forbidden file extensions that cannot be uploaded to Infrakit.
@@ -676,6 +715,14 @@ namespace Library
                         dict.Source = new Uri(path + "French.xaml", UriKind.RelativeOrAbsolute);
                         break;
 
+                    case "fi":
+                        dict.Source = new Uri(path + "Finnish.xaml", UriKind.RelativeOrAbsolute);
+                        break;
+
+                    case "pl":
+                        dict.Source = new Uri(path + "Polish.xaml", UriKind.RelativeOrAbsolute);
+                        break;
+
                     case "en":
                     default:
                         dict.Source = new Uri(path + "English.xaml", UriKind.RelativeOrAbsolute);
@@ -719,7 +766,13 @@ namespace Library
                         return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("de-DE"));
 
                     case "fr":
-                        return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("fr-FR"));
+                        return dt.ToString("ddd. dd/MM/yyyy", CultureInfo.CreateSpecificCulture("fr-FR"));
+
+                    case "fi":
+                        return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("fi-FI"));
+
+                    case "pl":
+                        return dt.ToString("ddd. dd.MM.yyyy", CultureInfo.CreateSpecificCulture("pl-PL"));
 
                     case "en":
                     default:
@@ -749,7 +802,13 @@ namespace Library
                         return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("de-DE"));
 
                     case "fr":
-                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fr-FR"));
+                        return dt.ToString("ddd. dd/MM/yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fr-FR"));
+
+                    case "fi":
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fi-FI"));
+
+                    case "pl":
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("pl-PL"));
 
                     case "en":
                     default:
