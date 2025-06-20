@@ -35,7 +35,7 @@ namespace Library.Models
         /// <summary>
         /// The geographic point where the image was taken, if known.
         /// </summary>
-        public GeographicPoint geographicPoint { get; set; }
+        public GeographicPoint? geographicPoint { get; set; }
 
         /// <summary>
         /// Whether the image is a panorama.
@@ -66,6 +66,29 @@ namespace Library.Models
             this.timestamp = timestamp;
             this.originalDate = originalDate;
             this.geographicPoint = new GeographicPoint(geographicPoint.lat, geographicPoint.lon, geographicPoint.elevation);
+            this.panorama = panorama;
+            this.creator = new Creator(creator.username, creator.uuid);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Image"/> class.
+        /// </summary>
+        /// <param name="uuid">The unique identifier of the image.</param>
+        /// <param name="name">The name of the image.</param>
+        /// <param name="description">The description of the image.</param>
+        /// <param name="timestamp">The timestamp of when the image was created.</param>
+        /// <param name="originalDate">The original date of the image, if known.</param>
+        /// <param name="geographicPoint">The geographic point where the image was taken, if known.</param>
+        /// <param name="panorama">Whether the image is a panorama.</param>
+        /// <param name="creator">The creator of the image.</param>
+        public Image(Guid uuid, string name, string description, long timestamp, long? originalDate, GeographicPoint? geographicPoint, bool? panorama, (string username, Guid uuid) creator)
+        {
+            this.uuid = uuid;
+            this.name = name;
+            this.description = description;
+            this.timestamp = timestamp;
+            this.originalDate = originalDate;
+            this.geographicPoint = geographicPoint;
             this.panorama = panorama;
             this.creator = new Creator(creator.username, creator.uuid);
         }

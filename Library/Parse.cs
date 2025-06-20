@@ -225,13 +225,21 @@ namespace Library
             var CreatorUsername = value.SelectToken("creator.username").Value<string>();
             var CreatorUuid = new Guid(value.SelectToken("creator.uuid").Value<string>());
 
-            var geographicPointLat = value.SelectToken("geographicPoint.lat").Value<double>();
-            var geographicPointLon = value.SelectToken("geographicPoint.lon").Value<double>();
-            var geographicPointElevation = value.SelectToken("geographicPoint.elevation").Value<long>();
+            var point = value.SelectToken("geographicPoint");
+
+            GeographicPoint? geographicPoint = null;
+
+            if (point != null && point.Type != JTokenType.Null)
+            {
+                var geographicPointLat = value.SelectToken("geographicPoint.lat").Value<double>();
+                var geographicPointLon = value.SelectToken("geographicPoint.lon").Value<double>();
+                var geographicPointElevation = value.SelectToken("geographicPoint.elevation").Value<long>();
+
+                geographicPoint = new GeographicPoint(geographicPointLat, geographicPointLon, geographicPointElevation);
+            }
 
             return new Image(ImageUuid, name, description, timestamp, originalDate,
-                (geographicPointLat, geographicPointLon, geographicPointElevation),
-                panorama, (CreatorUsername, CreatorUuid));
+                geographicPoint, panorama, (CreatorUsername, CreatorUuid));
         }
 
         /// <summary>
