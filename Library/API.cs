@@ -1,21 +1,19 @@
-﻿using RestSharp;
+﻿using Library.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RestSharp;
 using System;
-using System.Net;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
-using System.Windows;
-using System.Security.Cryptography;
-using Library.Models;
-using static Library.Utils;
-using System.Text;
-using Library.Resources;
-using System.Windows.Interop;
 using System.Linq;
-using System.Xml.Linq;
-using System.Windows.Media.TextFormatting;
+using System.Net;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Security.Policy;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using static Library.Utils;
 
 namespace Library
 {
@@ -1312,8 +1310,9 @@ namespace Library
                         }
                     }
 
-                    WebClient webClient = new WebClient();
-                    var bytes = webClient.DownloadData(uri);
+                    //WebClient webClient = new WebClient();
+                    //var bytes = webClient.DownloadData(uri);
+                    byte[] bytes = API.getFileContent(uri);
 
                     using (var fs = new FileStream(target, FileMode.Create, FileAccess.Write))
                     {
@@ -1339,6 +1338,16 @@ namespace Library
             }
 
             #endregion getDocumentURL
+        }
+
+        private static byte[] getFileContent(Uri uri)
+        {
+            using (var httpClient = new HttpClient())
+            {
+                var response = httpClient.GetAsync(uri).GetAwaiter().GetResult();
+                response.EnsureSuccessStatusCode();
+                return response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+            }
         }
 
         public static class Logpoint
@@ -1568,36 +1577,49 @@ namespace Library
             var language = LibraryUtils.getRDict();
             var caption = language[captionKey].ToString();
 
-            if(e.GetType() == typeof(WebException))
+            HttpStatusCode? statusCode;
+
+            if (e.GetType() == typeof(WebException))
             {
                 var webExeption = e as WebException;
 
-                if(webExeption.Status == WebExceptionStatus.Timeout)
+                switch (webExeption.Status)
                 {
-                    Log.write(captionKey + ": api.timeout");
-                    Utils.AutoClosingMessageBox.Show(
-                        language["api.timeout"].ToString(),
-                        caption,
-                        MessageBoxImage.Error,
-                        API.maxErrorDisplayTime,
-                        API.newErrorThread
-                    );
-                }
-                else
-                {
-                    Log.write(captionKey + ": WebException | " + webExeption.Status.ToString());
-                    Utils.AutoClosingMessageBox.Show(
-                        language["api.default"].ToString(),
-                        caption,
-                        MessageBoxImage.Error,
-                        API.maxErrorDisplayTime,
-                        API.newErrorThread
-                    );
-                }
-                return;
-            }
+                    case WebExceptionStatus.Timeout:
+                        Log.write(captionKey + ": api.timeout");
+                        Utils.AutoClosingMessageBox.Show(
+                            language["api.timeout"].ToString(),
+                            caption,
+                            MessageBoxImage.Error,
+                            API.maxErrorDisplayTime,
+                            API.newErrorThread
+                        );
+                        return;
 
-            if (!e.GetType().IsAssignableFrom(typeof(HttpRequestException)))
+                    case WebExceptionStatus.ProtocolError:
+                        if (webExeption.Response is HttpWebResponse response)
+                        {
+                            statusCode = response.StatusCode;
+                        }
+                        else
+                        {
+                            statusCode = null;
+                        }
+                        break;
+
+                    default:
+                        Log.write(captionKey + ": WebException | " + webExeption.Status.ToString());
+                        Utils.AutoClosingMessageBox.Show(
+                            language["api.default"].ToString(),
+                            caption,
+                            MessageBoxImage.Error,
+                            API.maxErrorDisplayTime,
+                            API.newErrorThread
+                        );
+                        return;
+                }
+            }
+            else if (!e.GetType().IsAssignableFrom(typeof(HttpRequestException)))
             {
                 Log.write(captionKey + ": " + e.GetType() + " | " + e.Message);
                 Utils.AutoClosingMessageBox.Show(
@@ -1609,9 +1631,12 @@ namespace Library
                 );
                 return;
             }
+            else
+            {
+                var httpExeption = e as HttpRequestException;
+                statusCode = httpExeption.StatusCode;
+            }
 
-            var httpExeption = e as HttpRequestException;
-            var statusCode = httpExeption.StatusCode;
 
             if (statusCode is null)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Library.Models
 {
@@ -42,6 +43,9 @@ namespace Library.Models
         /// </summary>
         public bool? panorama { get; set; }
 
+        //TODO: comment
+        public Dictionary<string, List<string>>? properties { get; set; }
+
         /// <summary>
         /// The creator of the image.
         /// </summary>
@@ -68,6 +72,7 @@ namespace Library.Models
             this.geographicPoint = new GeographicPoint(geographicPoint.lat, geographicPoint.lon, geographicPoint.elevation);
             this.panorama = panorama;
             this.creator = new Creator(creator.username, creator.uuid);
+            this.properties = null;
         }
 
         /// <summary>

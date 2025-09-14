@@ -94,7 +94,7 @@ namespace Library
                         propValue = propValue.Substring(1, propValue.Length - 2);
 
                         var propValues = propValue.Split(',')
-                            .Select(prop => prop.Trim('\"'))
+                            .Select(prop => prop.Trim(' ').Trim('\"'))
                             .ToList();
 
                         properties[propKey] = propValues;
