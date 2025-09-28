@@ -490,22 +490,34 @@
 
                     <Grid>
 
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="*"/>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                        </Grid.ColumnDefinitions>
+
                         <Border
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"/>
 
                         <TextBlock
+                            Grid.Column="0"
                             Text="{
                                 Binding Path=SelectedItem.Content,
                                 RelativeSource={RelativeSource AncestorType=ComboBox}
                             }"
-                            Margin="5,0"
+                            Margin="5,0,0,0"
                             VerticalAlignment="Center"/>
 
                         <Image
+                            Grid.Column="1"
                             x:Name="imgOpenClose"
-                            Margin="1,0,1,1"
+                            Margin="0,0,1,1"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Stretch"
                             Width="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}}"
@@ -513,6 +525,8 @@
                             Stretch="UniformToFill"/>
 
                         <ToggleButton
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
                             Name="ToggleButton"
                             Background="Transparent"
                             BorderBrush="Transparent"
