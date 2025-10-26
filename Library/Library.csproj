@@ -10,6 +10,7 @@
     <None Remove="Resources\Icons\calendar.ico" />
     <None Remove="Resources\Icons\Down.ico" />
     <None Remove="Resources\Icons\Hide.ico" />
+    <None Remove="Resources\Icons\Info.ico" />
     <None Remove="Resources\Icons\logo-icon-orange.svg" />
     <None Remove="Resources\Icons\Logo.svg" />
     <None Remove="Resources\Icons\Settings.ico" />
@@ -36,6 +37,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\Icons\Hide.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Info.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\Icons\Logo.ico">
