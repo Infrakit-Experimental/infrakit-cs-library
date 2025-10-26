@@ -264,7 +264,7 @@ namespace Library
                         if (!value.HasValues) continue;
 
                         try
-                        {
+                       {
                             projects.Add(Parse.project(value));
                         }
                         catch (InvalidCastException ex)

@@ -785,34 +785,41 @@ namespace Library
             /// </summary>
             /// <param name="dt">Timestamp</param>
             /// <param name="utc">Optional time zone information</param>
+            /// <param name="withTimezone">Whether to include the timezone in the output string</param>
             /// <returns>Date and time of timestamp as string</returns>
             /// <remarks>
             /// This method covers language-specific formatting.
             /// </remarks>
-            public static string getFormatedDateTime(DateTime dt, TimeZoneInfo? utc)
+            public static string getFormatedDateTime(DateTime dt, TimeZoneInfo? utc, bool withTimezone = true)
             {
                 if (utc != null)
                 {
                     dt = TimeZoneInfo.ConvertTime(dt, TimeZoneInfo.Utc, utc);
                 }
 
+                string timezone = "";
+                if (withTimezone)
+                {
+                    timezone = " (UTCzzz)";
+                }
+
                 switch (Language.get())
                 {
                     case "de":
-                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("de-DE"));
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm" + timezone, CultureInfo.CreateSpecificCulture("de-DE"));
 
                     case "fr":
-                        return dt.ToString("ddd. dd/MM/yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fr-FR"));
+                        return dt.ToString("ddd. dd/MM/yyyy HH:mm" + timezone, CultureInfo.CreateSpecificCulture("fr-FR"));
 
                     case "fi":
-                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("fi-FI"));
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm" + timezone, CultureInfo.CreateSpecificCulture("fi-FI"));
 
                     case "pl":
-                        return dt.ToString("ddd. dd.MM.yyyy HH:mm (UTCzzz)", CultureInfo.CreateSpecificCulture("pl-PL"));
+                        return dt.ToString("ddd. dd.MM.yyyy HH:mm" + timezone, CultureInfo.CreateSpecificCulture("pl-PL"));
 
                     case "en":
                     default:
-                        return dt.ToString("ddd. MM/dd/yyyy hh:mm tt (UTCzzz)", CultureInfo.CreateSpecificCulture("en-US"));
+                        return dt.ToString("ddd. MM/dd/yyyy hh:mm tt" + timezone, CultureInfo.CreateSpecificCulture("en-US"));
                 }
             }
         }

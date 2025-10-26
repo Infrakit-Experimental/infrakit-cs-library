@@ -146,7 +146,11 @@ namespace Library.InputWindows
             }
         }
 
-        //TODO: comment listener
+        /// <summary>
+        /// Shows or hides the entered password.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event arguments.</param>
         private void btnShowHidePassword_Click(object sender, RoutedEventArgs e)
         {
             if (this.tbxPasswordHidden.Visibility == Visibility.Visible)

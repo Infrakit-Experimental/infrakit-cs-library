@@ -43,7 +43,9 @@ namespace Library.Models
         /// </summary>
         public bool? panorama { get; set; }
 
-        //TODO: comment
+        /// <summary>
+        /// The properties of the image.
+        /// </summary>
         public Dictionary<string, List<string>>? properties { get; set; }
 
         /// <summary>
