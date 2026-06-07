@@ -9,13 +9,13 @@ namespace Library
         /// <summary>
         /// The path to the general languages directory.
         /// </summary>
-        internal static readonly string languagesDirectory = "pack://application:,,,/Library;component/Resources/Languages/";
+        internal static readonly string languagesDirectory = "pack://application:,,,/Library;component/Resources/Languages";
 
         /// <summary>
         /// Sets the general resource dictionary for the specified window.
         /// </summary>
         /// <param name="w">The window to set the resource dictionary for.</param>
-        internal static void setLibraryRDict(this Window w)
+        public static void setLibraryRDict(this Window w)
         {
             w.Resources.MergedDictionaries.Add(LibraryUtils.getRDict());
         }
@@ -38,7 +38,7 @@ namespace Library
         /// </summary>
         /// <param name="language">The language to get the resource dictionary for.</param>
         /// <returns>The general resource dictionary for the current language, or null if the resource dictionary does not exist.</returns>
-        internal static ResourceDictionary getRDict(string? language = null)
+        public static ResourceDictionary getRDict(string? language = null)
         {
             if(language == null)
             {

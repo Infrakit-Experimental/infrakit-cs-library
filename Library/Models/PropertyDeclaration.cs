@@ -43,119 +43,13 @@ namespace Library.Models
         /// <param name="projectUuid">The UUID of the project to which the property belongs.</param>
         /// <param name="labels">The labels of the property.</param>
         /// <param name="schemata">The schema of the property.</param>
-        public PropertyDeclaration(string propertyKey, Guid organizationUuid, Guid projectUuid, Dictionary<string, string>? labels, JObject schemata)
+        public PropertyDeclaration(string propertyKey, Guid organizationUuid, Guid projectUuid, Dictionary<string, string>? labels, Schema schema)
         {
             this.propertyKey = propertyKey;
             this.organizationUuid = organizationUuid;
             this.projectUuid = projectUuid;
             this.labels = labels;
-
-            switch (schemata.SelectToken("type").Value<string>())
-            {
-                case "string":
-                    #region pattern
-
-                    string? pattern = null;
-                    if (schemata["pattern"] is not null)
-                    {
-                        pattern = schemata.SelectToken("pattern").Value<string>();
-                    }
-
-                    #endregion pattern
-
-                    this.schema = new Schema.String(pattern);
-                    break;
-
-                case "number":
-                    #region (exclusive) minimum
-
-                    int? minimum = null;
-                    bool exclusiveMin = false;
-                    if (schemata["minimum"] is not null)
-                    {
-                        minimum = schemata.SelectToken("minimum").Value<int>();
-                    }
-                    else if (schemata["exclusiveMinimum"] is not null)
-                    {
-                        minimum = schemata.SelectToken("exclusiveMinimum").Value<int>();
-                        exclusiveMin = true;
-                    }
-
-                    #endregion (exclusive) minimum
-
-                    #region (exclusive) maximum
-
-                    int? maximum = null;
-                    bool exclusiveMax = false;
-                    if (schemata["maximum"] is not null)
-                    {
-                        maximum = schemata.SelectToken("maximum").Value<int>();
-                    }
-                    else if (schemata["exclusiveMaximum"] is not null)
-                    {
-                        maximum = schemata.SelectToken("exclusiveMaximum").Value<int>();
-                        exclusiveMax = true;
-                    }
-
-                    #endregion (exclusive) maximum
-
-                    #region pattern
-
-                    pattern = null;
-                    if (schemata["pattern"] is not null)
-                    {
-                        pattern = schemata.SelectToken("pattern").Value<string>();
-                    }
-
-                    #endregion pattern
-
-                    this.schema = new Schema.Number(minimum, maximum, exclusiveMin, exclusiveMax, pattern);
-                    break;
-
-                case "array":
-                    #region items
-
-                    List<string>? @enum = null;
-
-                    if (schemata["items"] is not null)
-                    {
-                        var items = schemata.SelectToken("items").Value<JObject>();
-                        @enum = new();
-
-                        foreach (var e in items.SelectToken("enum").Value<JArray>())
-                        {
-                            @enum.Add(e.ToString());
-                        }
-                    }
-
-                    #endregion items
-
-                    #region minItems
-
-                    int minItems = schemata.SelectToken("minItems").Value<int>();
-
-                    #endregion minItems
-
-                    #region maxItems
-
-                    int? maxItems = null;
-
-                    if (schemata["maxItems"] is not null)
-                    {
-                        maxItems = schemata.SelectToken("maxItems").Value<int>();
-                    }
-
-                    #endregion maxItems
-
-                    #region uniqueItems
-
-                    bool uniqueItems = schemata.SelectToken("uniqueItems").Value<bool>();
-
-                    #endregion uniqueItems
-
-                    this.schema = new Schema.Array(@enum, minItems, maxItems, uniqueItems);
-                    break;
-            }
+            this.schema = schema;
         }
 
         /// <summary>
@@ -318,6 +212,21 @@ namespace Library.Models
 
                     return json.ToString();
                 }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is null) return false;
+
+                    // Optimization for a common success case.
+                    if (Object.ReferenceEquals(this, obj)) return true;
+
+                    // If run-time types are not exactly the same, return false.
+                    if (this.GetType() != obj.GetType()) return false;
+
+                    var item = obj as String;
+
+                    return this.pattern == item.pattern;
+                }
             }
 
             /// <summary>
@@ -414,6 +323,29 @@ namespace Library.Models
 
                     return json.ToString();
                 }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is null) return false;
+
+                    // Optimization for a common success case.
+                    if (Object.ReferenceEquals(this, obj)) return true;
+
+                    // If run-time types are not exactly the same, return false.
+                    if (this.GetType() != obj.GetType()) return false;
+
+                    var item = obj as Number;
+
+                    if (this.minimum != item.minimum) return false;
+
+                    if (this.maximum != item.maximum) return false;
+
+                    if (this.exclusiveMin != item.exclusiveMin) return false;
+
+                    if (this.exclusiveMax != item.exclusiveMax) return false;
+
+                    return this.pattern == item.pattern;
+                }
             }
 
             /// <summary>
@@ -467,8 +399,11 @@ namespace Library.Models
                 {
                     var json = base.getBaseJSON();
 
-                    json.Append(",");
-                    json.Append(this.items.getJSON());
+                    if (this.items is not null)
+                    {
+                        json.Append(",");
+                        json.Append(this.items.getJSON());
+                    }
 
                     json.Append(",\"minItems\":\"");
                     json.Append(this.minItems);
@@ -488,6 +423,37 @@ namespace Library.Models
                     json.Append("}");
 
                     return json.ToString();
+                }
+
+                public void addEnumValue(string value)
+                {
+                    if (this.items is null)
+                    {
+                        this.items = new Items(new List<string>());
+                    }
+                    this.items.@enum.Add(value);
+                }
+
+                public override bool Equals(object obj)
+                {
+                    if (obj is null) return false;
+
+                    // Optimization for a common success case.
+                    if (Object.ReferenceEquals(this, obj)) return true;
+
+                    // If run-time types are not exactly the same, return false.
+                    if (this.GetType() != obj.GetType()) return false;
+
+                    var item = obj as Array;
+
+                    if (this.items is null && item.items is null) return true;
+
+                    if (this.items is not null && item.items is not null)
+                    {
+                        return this.items.Equals(item.items);
+                    }
+
+                    return false;
                 }
 
                 /// <summary>
@@ -541,8 +507,50 @@ namespace Library.Models
 
                         return json.ToString();
                     }
+
+                    public override bool Equals(object obj)
+                    {
+                        if (obj is null) return false;
+
+                        // Optimization for a common success case.
+                        if (Object.ReferenceEquals(this, obj)) return true;
+
+                        // If run-time types are not exactly the same, return false.
+                        if (this.GetType() != obj.GetType()) return false;
+
+                        var item = obj as Items;
+
+                        if (this.@enum.Count != item.@enum.Count) return false;
+
+                        for (int i = 0; i < this.@enum.Count; i++)
+                        {
+                            if (!this.@enum[i].Equals(item.@enum[i]))
+                            {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
                 }
             }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+
+            // Optimization for a common success case.
+            if (Object.ReferenceEquals(this, obj)) return true;
+
+            // If run-time types are not exactly the same, return false.
+            if (this.GetType() != obj.GetType()) return false;
+
+            var item = obj as PropertyDeclaration;
+
+            if (!this.propertyKey.Equals(item.propertyKey)) return false;
+
+            return this.schema.Equals(item.schema);
         }
     }
 }

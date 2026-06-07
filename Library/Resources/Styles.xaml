@@ -1479,4 +1479,203 @@
         
     </Style>
 
+    <Style x:Key="IKDragAndDrop" TargetType="ContentControl">
+        <Style.Resources>
+            <SolidColorBrush x:Key="ErrorBrush" Color="#C7001E"/>
+            <SolidColorBrush x:Key="HoverBrush" Color="#F1F5F9"/>
+            <SolidColorBrush x:Key="MetaBrush" Color="#859099"/>
+            <SolidColorBrush x:Key="InfoBrush" Color="#666666"/>
+            <SolidColorBrush x:Key="InfoHighlightBrush" Color="#FF9356"/>
+        </Style.Resources>
+        
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="AllowDrop" Value="True"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="#B3BCC5"/>
+
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Grid>
+
+                        <!--#region structure definitions-->
+
+                        <Grid.RowDefinitions>
+
+                            <RowDefinition Height="*"/>
+
+                            <RowDefinition Height="auto"/>
+
+                            <RowDefinition Height="auto"/>
+
+                        </Grid.RowDefinitions>
+
+                        <!--#endregion structure definitions-->
+                        
+                        <!-- Rahmen / Fläche -->
+                        <Rectangle
+                            Grid.Row="0"
+                            x:Name="DropBorder"
+                            Fill="{TemplateBinding Background}"
+                            Stroke="{TemplateBinding BorderBrush}"
+                            StrokeThickness="1"
+                            StrokeDashArray="6,6"/>
+
+                        <!-- Overlay -->
+                        <StackPanel
+                            Grid.Row="0"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            IsHitTestVisible="False">
+
+                            <Image
+                                Source="pack://application:,,,/Library;component/Resources/Icons/Upload.ico"
+                                Width="48"
+                                Height="48"
+                                Margin="5"/>
+
+
+                            <TextBlock
+                                TextAlignment="Center"
+                                FontSize="12"
+                                Margin="5">
+                                
+                                <Run
+                                    Text="{DynamicResource dragAndDrop.info.first}"
+                                    Foreground="{StaticResource InfoBrush}"/>
+                                
+                                <Run
+                                    Text="{DynamicResource dragAndDrop.info.highlight}"
+                                    Foreground="{StaticResource InfoHighlightBrush}"/>
+                                
+                            </TextBlock>
+                            
+                        </StackPanel>
+
+                        <Grid
+                            Grid.Row="1">
+
+                            <!--#region structure definitions-->
+
+                            <Grid.ColumnDefinitions>
+
+                                <ColumnDefinition Width="auto"/>
+
+                                <ColumnDefinition Width="*"/>
+
+                                <ColumnDefinition Width="*"/>
+                                
+                                <ColumnDefinition Width="auto"/>
+
+                            </Grid.ColumnDefinitions>
+
+                            <!--#endregion structure definitions-->
+
+                            <TextBlock
+                                Grid.Column="0"
+                                Text="{DynamicResource dragAndDrop.meta.fileType}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding ElementName=FileType, Path=Visibility}"
+                                FontSize="12"
+                                Foreground="{StaticResource MetaBrush}"
+                                Margin="5"/>
+
+                            <ContentPresenter
+                                Grid.Column="1"
+                                Content="{Binding ElementName=FileType, Path=Text}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding ElementName=FileType, Path=Visibility}"
+                                TextElement.FontSize="12"
+                                TextElement.Foreground="{StaticResource MetaBrush}"
+                                Margin="0,5,5,5"/>
+
+                            <TextBlock
+                                Grid.Column="2"
+                                Text="{DynamicResource dragAndDrop.meta.fileSize}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Visibility="{Binding ElementName=FileSize, Path=Visibility}"
+                                FontSize="12"
+                                Foreground="{StaticResource MetaBrush}"
+                                Margin="5"/>
+
+                            <ContentPresenter
+                                Grid.Column="3"
+                                Content="{Binding ElementName=FileSize, Path=Text}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"                                
+                                Visibility="{Binding ElementName=FileSize, Path=Visibility}"
+                                TextElement.FontSize="12"
+                                TextElement.Foreground="{StaticResource MetaBrush}"
+                                Margin="0,5,5,5"/>
+
+                        </Grid>
+                        
+                        <Grid
+                            Grid.Row="2"
+                            x:Name="gdError"
+                            Visibility="Collapsed">
+
+                            <!--#region structure definitions-->
+
+                            <Grid.ColumnDefinitions>
+
+                                <ColumnDefinition Width="auto"/>
+
+                                <ColumnDefinition Width="*"/>
+
+                            </Grid.ColumnDefinitions>
+
+                            <!--#endregion structure definitions-->
+
+                            <Image
+                                Grid.Column="0"
+                                Source="pack://application:,,,/Library;component/Resources/Icons/Warning.ico"
+                                Width="12"
+                                Height="12"
+                                Margin="5"/>
+
+                            <TextBlock
+                                Grid.Column="1"
+                                Text="{DynamicResource dragAndDrop.error}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{StaticResource ErrorBrush}"
+                                Margin="0,5,5,5"/>
+
+                        </Grid>
+
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+
+                        <!-- Hover -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter
+                                Property="Background"
+                                Value="{StaticResource HoverBrush}"/>
+                        </Trigger>
+
+                        <!-- Error -->
+                        <Trigger Property="Tag" Value="Error">
+                            <Setter
+                                Property="BorderBrush"
+                                Value="{StaticResource ErrorBrush}"/>
+
+                            <Setter
+                                TargetName="gdError"
+                                Property="Visibility"
+                                Value="Visible"/>
+                            
+                        </Trigger>
+
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

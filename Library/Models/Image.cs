@@ -9,7 +9,12 @@ namespace Library.Models
     public class Image
     {
         /// <summary>
-        /// The unique identifier of the image.
+        /// The unique identifier of the project.
+        /// </summary>
+        public int id { get; set; }
+
+        /// <summary>
+        /// The universally unique identifier (UUID) of the project.
         /// </summary>
         public Guid uuid { get; set; }
 
@@ -39,6 +44,11 @@ namespace Library.Models
         public GeographicPoint? geographicPoint { get; set; }
 
         /// <summary>
+        /// The orientation of the view of the image.
+        /// </summary>
+        public int? orientation { get; set; }
+
+        /// <summary>
         /// Whether the image is a panorama.
         /// </summary>
         public bool? panorama { get; set; }
@@ -64,17 +74,24 @@ namespace Library.Models
         /// <param name="geographicPoint">The geographic point where the image was taken, if known.</param>
         /// <param name="panorama">Whether the image is a panorama.</param>
         /// <param name="creator">The creator of the image.</param>
-        public Image(Guid uuid, string name, string description, long timestamp, long? originalDate, (double lat, double lon, long elevation) geographicPoint, bool? panorama, (string username, Guid uuid) creator)
+        public Image(int id, Guid uuid, string name, string description, long timestamp, long? originalDate, (double lat, double lon, long? elevation)? geographicPoint, int? orientation, Dictionary<string, List<string>>? properties)
         {
+            this.id = id;
             this.uuid = uuid;
             this.name = name;
             this.description = description;
             this.timestamp = timestamp;
             this.originalDate = originalDate;
-            this.geographicPoint = new GeographicPoint(geographicPoint.lat, geographicPoint.lon, geographicPoint.elevation);
-            this.panorama = panorama;
-            this.creator = new Creator(creator.username, creator.uuid);
-            this.properties = null;
+            this.orientation = orientation;
+            if (geographicPoint is null)
+            {
+                this.geographicPoint = null;
+            }
+            else
+            {
+                this.geographicPoint = new GeographicPoint(geographicPoint.Value.lat, geographicPoint.Value.lon, geographicPoint.Value.elevation);
+            }
+            this.properties = properties;
         }
 
         /// <summary>

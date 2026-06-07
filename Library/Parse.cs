@@ -1,9 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Library.Models;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Library.Models;
+using static Library.Models.PropertyDeclaration;
 
 namespace Library
 {
@@ -12,6 +13,25 @@ namespace Library
     /// </summary>
     internal static class Parse
     {
+        // TODO: comment
+        internal static Time time(JToken value)
+        {
+            var utcTimeStr = value.SelectToken("utcTime").Value<string>();
+            var serverTimeStr = value.SelectToken("serverTime").Value<string>();
+            var userTimeStr = value.SelectToken("userTime").Value<string>();
+
+            var utcTime = DateTime.Parse(utcTimeStr, null, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+            var serverTime = DateTime.Parse(serverTimeStr, null, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+
+            if (userTimeStr is null)
+            {
+                return new Time(utcTime, serverTime);
+            }
+
+            var userTime = DateTime.Parse(userTimeStr, null, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+            return new Time(utcTime, serverTime, userTime);
+        }
+
         /// <summary>
         /// Parses a JSON object into a Project object.
         /// </summary>
@@ -368,9 +388,123 @@ namespace Library
 
             #endregion labels
 
-            var schema = value.SelectToken("schema").Value<JObject>();
+            var schemata = value.SelectToken("schema").Value<JObject>();
+
+            var schema = Parse.schemata(schemata);
 
             return new PropertyDeclaration(propertyKey, organizationUuid, projectUuid, labels, schema);
+        }
+
+        //TODO: comment
+        internal static PropertyDeclaration.Schema schemata(JObject schemata)
+        {
+
+            switch (schemata.SelectToken("type").Value<string>())
+            {
+                case "string":
+                    #region pattern
+
+                    string? pattern = null;
+                    if (schemata["pattern"] is not null)
+                    {
+                        pattern = schemata.SelectToken("pattern").Value<string>();
+                    }
+
+                    #endregion pattern
+
+                    return new Schema.String(pattern);
+
+                case "number":
+                    #region (exclusive) minimum
+
+                    int? minimum = null;
+                    bool exclusiveMin = false;
+                    if (schemata["minimum"] is not null)
+                    {
+                        minimum = schemata.SelectToken("minimum").Value<int>();
+                    }
+                    else if (schemata["exclusiveMinimum"] is not null)
+                    {
+                        minimum = schemata.SelectToken("exclusiveMinimum").Value<int>();
+                        exclusiveMin = true;
+                    }
+
+                    #endregion (exclusive) minimum
+
+                    #region (exclusive) maximum
+
+                    int? maximum = null;
+                    bool exclusiveMax = false;
+                    if (schemata["maximum"] is not null)
+                    {
+                        maximum = schemata.SelectToken("maximum").Value<int>();
+                    }
+                    else if (schemata["exclusiveMaximum"] is not null)
+                    {
+                        maximum = schemata.SelectToken("exclusiveMaximum").Value<int>();
+                        exclusiveMax = true;
+                    }
+
+                    #endregion (exclusive) maximum
+
+                    #region pattern
+
+                    pattern = null;
+                    if (schemata["pattern"] is not null)
+                    {
+                        pattern = schemata.SelectToken("pattern").Value<string>();
+                    }
+
+                    #endregion pattern
+
+                    return new Schema.Number(minimum, maximum, exclusiveMin, exclusiveMax, pattern);
+
+                case "array":
+                    #region items
+
+                    List<string>? @enum = null;
+
+                    if (schemata["items"] is not null)
+                    {
+                        var items = schemata.SelectToken("items").Value<JObject>();
+                        @enum = new();
+
+                        foreach (var e in items.SelectToken("enum").Value<JArray>())
+                        {
+                            @enum.Add(e.ToString());
+                        }
+                    }
+
+                    #endregion items
+
+                    #region minItems
+
+                    int minItems = schemata.SelectToken("minItems").Value<int>();
+
+                    #endregion minItems
+
+                    #region maxItems
+
+                    int? maxItems = null;
+
+                    if (schemata["maxItems"] is not null)
+                    {
+                        maxItems = schemata.SelectToken("maxItems").Value<int>();
+                    }
+
+                    #endregion maxItems
+
+                    #region uniqueItems
+
+                    bool uniqueItems = schemata.SelectToken("uniqueItems").Value<bool>();
+
+                    #endregion uniqueItems
+
+                    return new Schema.Array(@enum, minItems, maxItems, uniqueItems);
+
+                default:
+                    throw new NotImplementedException("Schema type not implemented: " + schemata.SelectToken("type").Value<string>());
+            }
         }
     }
 }

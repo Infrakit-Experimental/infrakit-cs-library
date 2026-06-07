@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Windows.Controls;
-using System.Windows;
-using System.Xml;
-using System.Threading;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.Collections.ObjectModel;
-using System.Linq;
+using System.Threading;
+using System.Windows;
+using System.Windows.Controls;
+using System.Xml;
+
 
 namespace Library
 {
@@ -30,11 +34,33 @@ namespace Library
 
         #region folder tree
 
-        public class FolderViewModel
+        public class FolderViewModel : INotifyPropertyChanged
         {
             public string name { get; set; }
             public Guid uuid { get; set; }
+
             public ObservableCollection<FolderViewModel> children { get; set; }
+
+            private bool _isSelected = false;
+            public bool isSelected
+            {
+                get => _isSelected;
+                set
+                {
+                    if (_isSelected != value)
+                    {
+                        _isSelected = value;
+                        OnPropertyChanged();
+                    }
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
 
             public static FolderViewModel? BuildFolderTree(List<Models.Folder> folders)
             {
@@ -123,7 +149,7 @@ namespace Library
         /// Logs the user into the application.
         /// </summary>
         /// <returns>True if the user was successfully logged in, false otherwise.</returns>
-        public static bool logIn()
+        public static bool logIn(bool shutDown = true)
         {
             InputWindows.LogInWindow iw = new();
 
@@ -131,7 +157,7 @@ namespace Library
 
             if (!loggedIn.HasValue || !loggedIn.Value)
             {
-                Application.Current.Shutdown();
+                if (shutDown) { Application.Current.Shutdown(); }
                 return false;
             }
 
@@ -195,6 +221,9 @@ namespace Library
             /// The path to the resources directory.
             /// </summary>
             public static readonly string directory = Path.Combine(Environment.CurrentDirectory, "Resources");
+
+            public static readonly string appDirectory =
+                $"pack://application:,,,/{Assembly.GetEntryAssembly().GetName().Name};component/Resources";
 
             /// <summary>
             /// The path to the resources XML document.
@@ -536,13 +565,13 @@ namespace Library
 
                 XmlNode? node = resources.DocumentElement.SelectSingleNode("/body/" + name);
 
-                if(node is null)
+                if (node is null)
                 {
                     node = resources.CreateElement(name);
 
                     XmlNode? body = resources.DocumentElement.SelectSingleNode("/body");
 
-                    if(body is null)
+                    if (body is null)
                     {
                         body = resources.CreateElement("body");
                         resources.AppendChild(body);
@@ -641,7 +670,7 @@ namespace Library
             /// <summary>
             /// The path to the languages directory.
             /// </summary>
-            internal static readonly string directory = "..\\Resources\\Languages\\";
+            internal static readonly string appDirectory = $"{Resources.appDirectory}/Languages";
 
             /// <summary>
             /// Sets the language for the application.
@@ -687,12 +716,12 @@ namespace Library
             /// <returns>The resource dictionary for the specified language, or null if the resource dictionary does not exist.</returns>
             public static ResourceDictionary getRDict(string? language = null)
             {
-                if(language == null)
+                if (language == null)
                 {
                     language = Language.get();
                 }
 
-                return Language.getRDict(language, Language.directory);
+                return Language.getRDict(language, Language.appDirectory);
             }
 
             /// <summary>
@@ -708,26 +737,28 @@ namespace Library
                 switch (language)
                 {
                     case "de":
-                        dict.Source = new Uri(path + "German.xaml", UriKind.RelativeOrAbsolute);
+                        path = $"{path}/German.xaml";
                         break;
 
                     case "fr":
-                        dict.Source = new Uri(path + "French.xaml", UriKind.RelativeOrAbsolute);
+                        path = $"{path}/French.xaml";
                         break;
 
                     case "fi":
-                        dict.Source = new Uri(path + "Finnish.xaml", UriKind.RelativeOrAbsolute);
+                        path = $"{path}/Finnish.xaml";
                         break;
 
                     case "pl":
-                        dict.Source = new Uri(path + "Polish.xaml", UriKind.RelativeOrAbsolute);
+                        path = $"{path}/Polish.xaml";
                         break;
 
                     case "en":
                     default:
-                        dict.Source = new Uri(path + "English.xaml", UriKind.RelativeOrAbsolute);
+                        path = $"{path}/English.xaml";
                         break;
                 }
+
+                dict.Source = new Uri(path, UriKind.RelativeOrAbsolute);
 
                 return dict;
             }
@@ -901,7 +932,6 @@ namespace Library
         }
 
         #endregion log
-
         public static void secureSave(this XmlDocument resources, string directory, string path)
         {
             try
@@ -942,6 +972,10 @@ namespace Library
             /// </summary>
             private string _caption;
 
+            public static bool newThread = false;
+
+            public static TimeSpan? maxDisplayTime = new TimeSpan(0, 15, 0);
+
             /// <summary>
             /// Initializes a new instance of the AutoClosingMessageBox class.
             /// It displays a message box with the specified text, caption, and image.
@@ -973,31 +1007,40 @@ namespace Library
             /// <summary>
             /// Displays an auto-closing message box with the specified text, caption, and image.
             /// The message box will close after the specified timeout.
-            /// If the 'newThread' parameter is true, it creates and starts a new thread to display the message box.
             /// </summary>
             /// <param name="text">The message to display.</param>
             /// <param name="caption">The title of the message box.</param>
             /// <param name="image">The icon to display in the message box.</param>
             /// <param name="timeout">The time after which the message box will close. If not specified, defaults to 15 minutes.</param>
-            /// <param name="newThread">Whether to display the message box in a new thread. If not specified, defaults to false.</param>
-            public static void Show(string text, string caption, MessageBoxImage image, TimeSpan? timeout = null, bool newThread = false)
+            public static void Show(string text, string caption, MessageBoxImage image, TimeSpan? timeout = null)
             {
-                if(!timeout.HasValue)
-                {
-                    timeout = new TimeSpan(0, 15, 0);
-                }
+                if (timeout.HasValue && timeout.Value <= TimeSpan.Zero) return;
 
-                if(newThread)
+                if (Utils.AutoClosingMessageBox.newThread)
                 {
                     var thread = new Thread(() =>
                     {
-                        new AutoClosingMessageBox(text, caption, image, timeout.Value);
+                        if (timeout.HasValue)
+                        {
+                            new AutoClosingMessageBox(text, caption, image, timeout.Value);
+                        }
+                        else
+                        {
+                            MessageBox.Show(text, caption, MessageBoxButton.OK, image);
+                        }
                     });
                     thread.Start();
                 }
                 else
                 {
-                    new AutoClosingMessageBox(text, caption, image, timeout.Value);
+                    if (timeout.HasValue)
+                    {
+                        new AutoClosingMessageBox(text, caption, image, timeout.Value);
+                    }
+                    else
+                    {
+                        MessageBox.Show(text, caption, MessageBoxButton.OK, image);
+                    }
                 }
             }
 

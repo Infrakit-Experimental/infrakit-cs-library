@@ -57,11 +57,18 @@
     <Resource Include="Resources\Icons\Up.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Resources\Icons\Upload.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Icons\Warning.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>
     <Page Update="Resources\Languages\English.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Resources\Languages\Finnish.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -71,6 +78,7 @@
     </Page>
     <Page Update="Resources\Languages\German.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Resources\Languages\Polish.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

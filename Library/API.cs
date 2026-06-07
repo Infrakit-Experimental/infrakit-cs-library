@@ -8,10 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Security.Policy;
 using System.Text;
-using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
 using static Library.Utils;
 
@@ -26,6 +26,9 @@ namespace Library
 
         private static string auth = "https://app.infrakit.com/kuura/";
         private static string uri = API.auth + "v1/";
+
+        public static bool showErrors = true;
+
         private static Environment _selectedEnv = Environment.Production;
         public static Environment selectedEnv
         { 
@@ -73,16 +76,6 @@ namespace Library
             }
         }
 
-        /// <summary>
-        /// A flag indicating whether a new thread should be created when errors occur.
-        /// </summary>
-        public static bool newErrorThread = false;
-
-        /// <summary>
-        /// The maximum amount of time that an error should be displayed for, when an <see cref="Utils.AutoClosingMessageBox"/> is uesed.
-        /// </summary>
-        public static TimeSpan maxErrorDisplayTime = new TimeSpan(0, 15, 0);
-
         #endregion variables
 
         /// <summary>
@@ -128,7 +121,48 @@ namespace Library
             return true;
         }
 
+        public static bool loggedIn()
+        {
+            if (API.api is null) return false;
+
+            if (DateTime.Compare(DateTime.Now.ToUniversalTime(), API.api.Value.expire) > 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         #region documented endpoints
+
+        // TODO: comment
+        public static Time? getTime()
+        {
+            //var out_ = new Time(DateTime.UtcNow, DateTime.UtcNow);
+            //return out_;
+            // TODO: remove above line when API is available
+            try
+            {
+                string url = API.uri + "time";
+
+                var client = new RestClient(url);
+
+                var request = new RestRequest();
+
+                var response = client.Get(request);
+
+                var json = response.Content;
+
+                var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                return Parse.time(values);
+            }
+            catch (Exception e)
+            {
+                API.errorHandling(e, "api.time");
+                return null;
+            }
+        }
 
         #region authentication
 
@@ -775,6 +809,41 @@ namespace Library
                     return null;
                 }
             }
+
+            public static string? putProperty(Guid uuid, string propertyKey)
+            {
+                try
+                {
+                    string url = API.uri + "folder/" + uuid + "/property/" + Uri.EscapeDataString(propertyKey);
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var response = client.Put(request);
+
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        var value = values.SelectToken("mapping").Value<JToken>();
+                        return value.ToString();
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.property.edit", v400: 2, v403: 3, v404: 7);
+                    return null;
+                }
+
+            }
         }
 
         public static class Group
@@ -948,15 +1017,14 @@ namespace Library
             /// <summary>
             /// Gets the URL for uploading a file to a document.
             /// </summary>
-            /// <param name="source">The path to the file to upload.</param>
-            /// <param name="target">The UUID of the folder to upload the file to.</param>
+            /// <param name="params">The upload parameters.</param>
             /// <returns>
-            /// A tuple of the status and a (Uri, Models.Document.Upload, Models.Document) tuple.
+            /// A tuple of the status and a (Uri, Models.Document) tuple.
             /// The status indicates whether the operation was successful.
-            /// The tuple contains the upload URL, the Models.Document.Upload object, and the Models.Document object.
+            /// The tuple contains the upload URL, and the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            private static (Status status, (Uri url, Models.Document doc, Models.Document.Upload param)? items)? getUploudURL(string source, Guid target)
+            public static (Status status, (Uri url, Models.Document doc)? items)? getUploudURL(Models.Document.Upload @params)
             {
                 try
                 {
@@ -968,8 +1036,7 @@ namespace Library
 
                     request.AddHeader("Authorization", "Bearer " + API.apiKey);
 
-                    var param = new Models.Document.Upload(source, target);
-                    request.AddBody(JsonConvert.SerializeObject(param));
+                    request.AddBody(JsonConvert.SerializeObject(@params));
 
                     var response = client.Post(request);
                     var json = response.Content;
@@ -980,11 +1047,11 @@ namespace Library
 
                     var document = Parse.document(value.SelectToken("document").Value<JToken>());
 
-                    return (Status.Successful, (new Uri(uri), document, param));
+                    return (Status.Successful, (new Uri(uri), document));
                 }
                 catch (Exception e)
                 {
-                    API.errorHandling(e, "api.document.getUploudURL", v404: 2, uuid: target);
+                    API.errorHandling(e, "api.document.getUploudURL", v404: 2, uuid: @params.folderUuid);
 
                     var httpExeption = e as HttpRequestException;
                     if (httpExeption is null) return null;
@@ -998,13 +1065,55 @@ namespace Library
 
                     if (httpExeption.StatusCode != HttpStatusCode.Forbidden) return null;
                     
-                    string fileExtension = Path.GetExtension(source);
-
-                    if (!Utils.forbiddenFileExtensions.Contains(fileExtension)) return null;
+                    if (!Utils.forbiddenFileExtensions.Contains(@params.fileExtension)) return null;
 
                     return (Status.InvalidExtension, null);
 
                     #endregion check for forbidden file extensions
+                }
+            }
+
+            public static bool upload(Uri url, Models.Document.Upload @params, byte[]? data = null)
+            {
+                try
+                {
+                    HttpWebRequest httpRequest = WebRequest.Create(url) as HttpWebRequest;
+                    httpRequest.Method = "PUT";
+                    httpRequest.Headers.Add("content-md5", @params.md5Base64);
+                    httpRequest.Headers.Add("content-length", @params.size.ToString());
+                    httpRequest.Headers.Add("content-type", @params.contentType);
+
+                    using (Stream dataStream = httpRequest.GetRequestStream())
+                    {
+                        if (data is null)
+                        {
+                            var buffer = new byte[8000];
+                            using (FileStream fileStream = new FileStream(@params.filePath, FileMode.Open, FileAccess.Read))
+                            {
+                                int bytesRead = 0;
+                                while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
+                                {
+                                    dataStream.Write(buffer, 0, bytesRead);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            dataStream.Write(data);
+                        }
+                    }
+
+                    var timeout = (int)(@params.size / 1024);
+                    httpRequest.Timeout = Math.Max(timeout, httpRequest.Timeout);
+
+                    HttpWebResponse response = httpRequest.GetResponse() as HttpWebResponse;
+
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.document.upload", v404: 2, uuid: @params.folderUuid);
+                    return false;
                 }
             }
 
@@ -1013,51 +1122,29 @@ namespace Library
             /// </summary>
             /// <param name="source">The path to the file to upload.</param>
             /// <param name="target">The UUID of the folder to upload the file to.</param>
+            /// <param name="description">An optional description for the document.</param>
+            /// <param name="coordinates">Optional geographic WGS84 coordinates to associate with the document.</param>
             /// <returns>
             /// A tuple of the status and a Models.Document tuple.
             /// The status indicates whether the operation was successful.
             /// The tuple contains the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            public static (Status status, Models.Document? doc)? upload(string source, Guid target)
+            public static (Status status, Models.Document? doc)? upload(string source, Guid target, string? description = null, (int lat, int @long)? coordinates = null)
             {
                 try
                 {
-                    var upload = API.Document.getUploudURL(source, target);
+                    var @params = new Models.Document.Upload(source, target, description, coordinates);
+
+                    var upload = API.Document.getUploudURL(@params);
 
                     if (!upload.HasValue) return null;
 
                     if(upload.Value.status != Status.Successful) return (upload.Value.status, null);
 
-                    var (url, doc, param) = upload.Value.items.Value;
+                    var (url, doc) = upload.Value.items.Value;
 
-                    string md5Base64 = Convert.ToBase64String(API.Document.HexStringToHex(param.checksum));
-
-                    HttpWebRequest httpRequest = WebRequest.Create(url) as HttpWebRequest;
-                    httpRequest.Method = "PUT";
-                    httpRequest.Headers.Add("content-md5", md5Base64);
-                    httpRequest.Headers.Add("content-length", param.size.ToString());
-                    httpRequest.Headers.Add("content-type", param.contentType);
-
-                    using (Stream dataStream = httpRequest.GetRequestStream())
-                    {
-                        var buffer = new byte[8000];
-                        using (FileStream fileStream = new FileStream(source, FileMode.Open, FileAccess.Read))
-                        {
-                            int bytesRead = 0;
-                            while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                dataStream.Write(buffer, 0, bytesRead);
-                            }
-                        }
-                    }
-
-                    FileInfo fileInfo = new FileInfo(source);
-                    long fileSizeInBytes = fileInfo.Length;
-                    var timeout = (int)(fileSizeInBytes / 1024);
-                    httpRequest.Timeout = Math.Max(timeout, httpRequest.Timeout);
-
-                    HttpWebResponse response = httpRequest.GetResponse() as HttpWebResponse;
+                    if (!API.Document.upload(url, @params)) return null;
 
                     return (Status.Successful, doc);
                 }
@@ -1066,21 +1153,6 @@ namespace Library
                     API.errorHandling(e, "api.document.upload", v404: 2, uuid: target);
                     return null;
                 }
-            }
-
-            /// <summary>
-            /// Converts an hex string into hex bytes
-            /// </summary>
-            /// <param name="inputHex">The hex string to convert</param>
-            /// <returns>The hex bytes</returns>
-            private static byte[] HexStringToHex(string inputHex)
-            {
-                var resultantArray = new byte[inputHex.Length / 2];
-                for (var i = 0; i < resultantArray.Length; i++)
-                {
-                    resultantArray[i] = Convert.ToByte(inputHex.Substring(i * 2, 2), 16);
-                }
-                return resultantArray;
             }
 
             #endregion getUploudURL
@@ -1161,6 +1233,117 @@ namespace Library
                 }
             }
 
+            public static Models.Document? changeFileName(Guid uuid, string newFileName)
+            {
+                try
+                {
+                    string url = API.uri + "document/" + uuid + "/name";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddQueryParameter("name", newFileName);
+
+                    var response = client.Put(request);
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        return Parse.document(values.SelectToken("document").Value<JToken>());
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.document.changeFileName", v403: 5, v404: 3, v409: 3, uuid: uuid);
+                    return null;
+                }
+            }
+
+            public static Models.Document? postProperty(Guid uuid, string key, string value)
+            {
+                try
+                {
+                    string url = API.uri + "document/" + uuid + "/property";
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    var body = new
+                    {
+                        key = key,
+                        value = value
+                    };
+
+                    request.AddBody(JsonConvert.SerializeObject(body));
+
+                    var response = client.Post(request);
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        return Parse.document(values.SelectToken("document").Value<JToken>());
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.document.postProperty", v404: 3, uuid: uuid);
+                    return null;
+                }
+            }
+
+            public static Models.Document? deleteProperty(Guid uuid, string key, string? value = null)
+            {
+                try
+                {
+                    string url = API.uri + "document/" + uuid + "/property/" + key;
+
+                    var client = new RestClient(url);
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    if (value is not null)
+                    {
+                        request.AddQueryParameter("value", value);
+                    }
+
+                    var response = client.Delete(request);
+
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        return Parse.document(values.SelectToken("document").Value<JToken>());
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.document.deleteProperty", v404: 3, uuid: uuid);
+                    return null;
+                }
+            }
+
             #region getDocumentURL
 
             /// <summary>
@@ -1209,17 +1392,19 @@ namespace Library
             /// The tuple contains the Models.Document object.
             /// Null is returned if an error occurred
             /// </returns>
-            public static (Status status, Models.Document? doc)? download(Guid source, string target, string targetFileName)
+            public static (Status status, Models.Document? doc)? download(Guid source, string targetDir, string targetFileName)
             {
                 try
                 {
+                    string target = Path.Combine(targetDir, targetFileName);
+
                     #region invalid path / file name
 
                     var invalidFileNameChars = Path.GetInvalidFileNameChars();
                     var invalidPathChars     = Path.GetInvalidPathChars();
 
                     bool invalidFileName = targetFileName.IndexOfAny(invalidFileNameChars) >= 0;
-                    var invalidPath      = targetFileName.IndexOfAny(invalidPathChars) >= 0;
+                    var invalidPath      = targetDir.IndexOfAny(invalidPathChars) >= 0;
 
                     if (invalidFileName || invalidPath)
                     {
@@ -1335,6 +1520,25 @@ namespace Library
                     API.errorHandling(e, "api.document.download", v404: 3, uuid: source);
                     return null;
                 }
+            }
+
+            public static string? checkFileName(string fileName)
+            {
+                char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
+
+                bool invalidFileName = fileName.IndexOfAny(invalidFileNameChars) >= 0;
+                if (!invalidFileName)
+                {
+                    return null;
+                }
+
+                string newFileName = fileName;
+                foreach (var c in invalidFileNameChars)
+                {
+                    newFileName = newFileName.Replace(c, '_');
+                }
+
+                return newFileName;
             }
 
             #endregion getDocumentURL
@@ -1461,7 +1665,7 @@ namespace Library
                 }
                 catch (Exception e)
                 {
-                    API.errorHandling(e, "api.property.getProject", v400: 2, v403: 3);
+                    API.errorHandling(e, "api.property.get", v400: 2, v403: 3);
                     return null;
                 }
             }
@@ -1501,7 +1705,86 @@ namespace Library
                 }
                 catch (Exception e)
                 {
-                    API.errorHandling(e, "api.property.addProject", v400: 2, v403: 3);
+                    API.errorHandling(e, "api.property.add", v400: 2, v403: 3);
+                    return null;
+                }
+            }
+
+            public static PropertyDeclaration? edit(PropertyDeclaration property)
+            {
+                try
+                {
+                    string url = API.uri + "property/" + Uri.EscapeDataString(property.propertyKey);
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddHeader("Content-Type", "application/json");
+
+                    request.AddQueryParameter("organizationUuid", property.organizationUuid);
+                    request.AddQueryParameter("projectUuid", property.projectUuid);
+
+                    string tmp = property.getJSON();
+
+                    request.AddBody(tmp);
+
+                    var response = client.Put(request);
+
+                    var json = response.Content;
+
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        var value = values.SelectToken("propertyDeclaration").Value<JToken>();
+                        return Parse.propertyDeclaration(value);
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.property.edit", v400: 2, v403: 3, v404: 7);
+                    return null;
+                }
+            }
+
+            public static PropertyDeclaration? delete(string propertyKey, Guid organizationUuid, Guid projectUuid)
+            {
+                try
+                {
+                    string url = API.uri + "property/" + propertyKey;
+
+                    var client = new RestClient(url);
+
+                    var request = new RestRequest();
+
+                    request.AddHeader("Authorization", "Bearer " + API.apiKey);
+
+                    request.AddParameter("organizationUuid", organizationUuid);
+                    request.AddParameter("projectUuid", projectUuid);
+
+                    var response = client.Delete(request);
+
+                    var json = response.Content;
+                    var values = (JObject)JsonConvert.DeserializeObject(json);
+
+                    if (values.SelectToken("status").Value<bool>() == true)
+                    {
+                        var value = values.SelectToken("propertyDeclaration").Value<JToken>();
+                        return Parse.propertyDeclaration(value);
+                    }
+
+                    long errorCode = values.SelectToken("errorCode").Value<long>();
+                    throw new HttpRequestException(null, null, (HttpStatusCode)errorCode);
+                }
+                catch (Exception e)
+                {
+                    API.errorHandling(e, "api.property.delete", v400: 2, v403: 3, v404: 7);
                     return null;
                 }
             }
@@ -1574,6 +1857,8 @@ namespace Library
         /// <param name="uuid">An optional UUID to include in the error message.</param>
         private static void errorHandling(Exception e, string captionKey, int v400 = 1, int v403 = 1, int v404 = 1, int v409 = 1, Guid? uuid = null)
         {
+            if (!API.showErrors) return;
+
             var language = LibraryUtils.getRDict();
             var caption = language[captionKey].ToString();
 
@@ -1591,8 +1876,7 @@ namespace Library
                             language["api.timeout"].ToString(),
                             caption,
                             MessageBoxImage.Error,
-                            API.maxErrorDisplayTime,
-                            API.newErrorThread
+                            Utils.AutoClosingMessageBox.maxDisplayTime
                         );
                         return;
 
@@ -1613,8 +1897,7 @@ namespace Library
                             language["api.default"].ToString(),
                             caption,
                             MessageBoxImage.Error,
-                            API.maxErrorDisplayTime,
-                            API.newErrorThread
+                            Utils.AutoClosingMessageBox.maxDisplayTime
                         );
                         return;
                 }
@@ -1626,8 +1909,7 @@ namespace Library
                     language["api.default"].ToString(),
                     caption,
                     MessageBoxImage.Error,
-                    API.maxErrorDisplayTime,
-                    API.newErrorThread
+                    Utils.AutoClosingMessageBox.maxDisplayTime
                 );
                 return;
             }
@@ -1645,8 +1927,7 @@ namespace Library
                     language["api.default"].ToString(),
                     caption,
                     MessageBoxImage.Error,
-                    API.maxErrorDisplayTime,
-                    API.newErrorThread
+                    Utils.AutoClosingMessageBox.maxDisplayTime
                 );
                 return;
             }
@@ -1705,8 +1986,7 @@ namespace Library
                 (int)statusCode + ": " + mBText.ToString(),
                 caption,
                 MessageBoxImage.Error,
-                API.maxErrorDisplayTime,
-                API.newErrorThread
+                Utils.AutoClosingMessageBox.maxDisplayTime
             );
         }
 
